@@ -547,6 +547,8 @@ int main(int argc, const char* argv[])
   memset (g_capi, 0, sizeof(SRxCryptoAPI));
   sca_status_t sca_status = API_STATUS_OK;
 
+  tm_rdtsc_init();
+
   if(srxCryptoInit(g_capi, &sca_status) == API_FAILURE);
   {
     LOG(LEVEL_DEBUG, "[BGPSEC] SRxCryptoAPI not initialized (0x%X)!", sca_status);

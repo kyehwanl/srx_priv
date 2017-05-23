@@ -366,9 +366,14 @@ bool _isSet(uint32_t bitmask, uint32_t bits)
  *
  * @return false if the packet could not be processed.
  */
+#include "libtm_rdtsc.h"
 static bool _processUpdateValidation(CommandHandler* cmdHandler,
                                      CommandQueueItem* item)
 {
+  static unsigned int valCount=0;
+  unsigned int g_measureCount = 1000;
+  unsigned long long val_end_clock;
+
   bool processed = true;
 
   SRXRPOXY_BasicHeader_VerifyRequest* bhdr =
@@ -397,7 +402,6 @@ static bool _processUpdateValidation(CommandHandler* cmdHandler,
                     "[0x%08X] but it does not exist!", updateID);
     return false;
   }
-
 
 #if defined (_DELEGATION_)
 #endif /* _DELEGATION_ */
@@ -464,11 +468,26 @@ static bool _processUpdateValidation(CommandHandler* cmdHandler,
     scaPrefix.addr.ipV4 = prefix->ip.addr.v4.in_addr;
     valdata.nlri = &scaPrefix;
 
+    if(valCount == 0)
+    {
+      clk_t0 = rdtsc();
+    }
     /* call API's validate call */
     uint8_t bgpsecResult;
     int valResult = srxCAPI->validate(&valdata);
     bgpsecResult = valResult == API_VALRESULT_VALID ? SRx_RESULT_VALID
                                                     : SRx_RESULT_INVALID;
+
+    valCount++;
+    if(valCount >= g_measureCount)
+    {
+      val_end_clock = rdtsc();
+      printf(" validate count reached %ld and terminate \n", g_measureCount);
+      valCount =0;
+      //exit(0);
+      print_clock_time(val_end_clock , clk_t0,      "SRx validation time :");
+    }
+
 
     SRxResult srxRes_mod;
     srxRes_mod.bgpsecResult = bgpsecResult;
