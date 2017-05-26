@@ -375,8 +375,8 @@ static bool _processUpdateValidation(CommandHandler* cmdHandler,
                                 (SRXRPOXY_BasicHeader_VerifyRequest*)item->data;
 
   // 1. get an idea what validations are requested:
-  bool originVal = _isSet(bhdr->type, SRX_PROXY_FLAGS_VERIFY_PREFIX_ORIGIN);
-  bool pathVal   = _isSet(bhdr->type, SRX_PROXY_FLAGS_VERIFY_PATH);
+  bool originVal = _isSet(bhdr->flags, SRX_PROXY_FLAGS_VERIFY_PREFIX_ORIGIN);
+  bool pathVal   = _isSet(bhdr->flags, SRX_PROXY_FLAGS_VERIFY_PATH);
   SRxUpdateID updateID = (SRxUpdateID)item->dataID;
 
   if (!originVal && !pathVal)
