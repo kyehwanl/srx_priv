@@ -4,26 +4,26 @@
  * their official duties. Pursuant to title 17 Section 105 of the United
  * States Code this software is not subject to copyright protection and
  * is in the public domain.
- * 
+ *
  * NIST assumes no responsibility whatsoever for its use by other parties,
  * and makes no guarantees, expressed or implied, about its quality,
  * reliability, or any other characteristic.
- * 
+ *
  * We would appreciate acknowledgment if the software is used.
- * 
+ *
  * NIST ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS" CONDITION AND
  * DISCLAIM ANY LIABILITY OF ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING
  * FROM THE USE OF THIS SOFTWARE.
- * 
- * 
+ *
+ *
  * This software might use libraries that are under GNU public license or
- * other licenses. Please refer to the licenses of all libraries required 
+ * other licenses. Please refer to the licenses of all libraries required
  * by this software.
  *
  */
 /**
  * Contains Constants and its definitions for SRX client/server and protocol.
- * 
+ *
  * @version 0.3.0
  *
  * SRx constant and type definitions.
@@ -81,7 +81,7 @@ typedef struct {
   uint8_t* signature;      // The signature block
 } PeerSignature;
 
-/** This structure is currently a dummy that is needed though for validation. 
+/** This structure is currently a dummy that is needed though for validation.
  * The data in here - if available - will be used to generate an update ID.s
  */
 typedef struct {
@@ -90,12 +90,18 @@ typedef struct {
   /** Contains the AS path as an array of as numbers encoded in network format.
    * AS repetitions are expected */
   uint32_t* asPath;
-  /** The length of the bgpsec path attribute in host format. Even though this 
-   * length is also encoded within the attribute itself this value is in host 
+  /** The length of the bgpsec path attribute in host format. Even though this
+   * length is also encoded within the attribute itself this value is in host
    * format and is added for convenience. If bgpsec_path_attr is NULL this value
    * must be zero and vice versa.
    */
   uint16_t attr_length;
+
+  uint16_t  afi;
+  uint8_t   safi;
+  uint8_t   reserved;
+  uint32_t  local_as;
+
   /** Contains the bgpsec path attribute according to the RFC. If this value
    * is NULL only the as path will be used. */
   uint8_t* bgpsec_path_attr;
@@ -105,7 +111,7 @@ typedef struct {
 //        the previous bgpsec path attribute is requested of maybe a complete
 //        signature block etc. This will be decided at a later point.
 /**
- * This is a temporary structure for Proxy returns to the caller. It will be 
+ * This is a temporary structure for Proxy returns to the caller. It will be
  * changed later on.
  */
 typedef struct {

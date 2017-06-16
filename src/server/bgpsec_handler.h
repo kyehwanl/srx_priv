@@ -4,19 +4,19 @@
  * their official duties. Pursuant to title 17 Section 105 of the United
  * States Code this software is not subject to copyright protection and
  * is in the public domain.
- * 
+ *
  * NIST assumes no responsibility whatsoever for its use by other parties,
  * and makes no guarantees, expressed or implied, about its quality,
  * reliability, or any other characteristic.
- * 
+ *
  * We would appreciate acknowledgment if the software is used.
- * 
+ *
  * NIST ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS" CONDITION AND
  * DISCLAIM ANY LIABILITY OF ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING
  * FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * This software might use libraries that are under GNU public license or
- * other licenses. Please refer to the licenses of all libraries required 
+ * other licenses. Please refer to the licenses of all libraries required
  * by this software.
  *
  * @version 0.3.0.10
@@ -38,12 +38,14 @@
 
 #include "server/key_cache.h"
 #include "shared/srx_defs.h"
+#include <srx/srxcryptoapi.h>
 
-/** 
+/**
  * A single BGPSec Handler.
  */
 typedef struct {
   KeyCache* keyCache;
+  SRxCryptoAPI* srxCAPI;
 } BGPSecHandler;
 
 /**
@@ -60,13 +62,13 @@ bool createBGPSecHandler(BGPSecHandler* self, KeyCache* keyCache,
 
 /**
  * Frees all allocated resources.
- * 
+ *
  * @param self Instance
  */
 void releaseBGPSecHandler(BGPSecHandler* self);
 
 /**
- * Loads a private key. 
+ * Loads a private key.
  * At least one call is necessary before createSignature can be used.
  *
  * @todo Adjust parameter if necessary
@@ -78,7 +80,7 @@ void releaseBGPSecHandler(BGPSecHandler* self);
 bool loadPrivateKey(BGPSecHandler* self, const char* filename);
 
 /**
- * Validates the signature of a given Byte-stream. 
+ * Validates the signature of a given Byte-stream.
  * The keys are fetched from the registered Key Cache.
  *
  * The return value is one of SRX_RES_BGPSEC_* - \ref result_values.

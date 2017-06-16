@@ -131,6 +131,8 @@ static bool cleanupRequired = false;
 // To allow to use it already ;-)
 static void doCleanupHandlers(int handler);
 
+
+SRxCryptoAPI *g_capi;
 ////////////////////
 // Server Call backs
 ////////////////////
@@ -499,6 +501,11 @@ void shutDown()
   raise(15);
 }
 
+SRxCryptoAPI* getSrxCAPI()
+{
+  return g_capi;
+}
+
 /**
  * The main program entry point. This function starts the server program.
  *
@@ -533,6 +540,19 @@ int main(int argc, const char* argv[])
   }
 
   LOG(LEVEL_DEBUG, "([0x%08X]) > Start Main SRx server thread.", pthread_self());
+
+
+  // srxcryphtoapi INIT
+  g_capi = malloc(sizeof(SRxCryptoAPI));
+  memset (g_capi, 0, sizeof(SRxCryptoAPI));
+  sca_status_t sca_status = API_STATUS_OK;
+
+  if(srxCryptoInit(g_capi, &sca_status) == API_FAILURE);
+  {
+    LOG(LEVEL_DEBUG, "[BGPSEC] SRxCryptoAPI not initialized (0x%X)!", sca_status);
+  }
+
+
 
   if ( passedConfig != 1)
   {

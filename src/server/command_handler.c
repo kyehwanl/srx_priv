@@ -398,6 +398,115 @@ static bool _processUpdateValidation(CommandHandler* cmdHandler,
     return false;
   }
 
+
+#if defined (_DELEGATION_)
+#endif /* _DELEGATION_ */
+  // Only do bgpdsec path validation if not already performed
+  if (pathVal && (srxRes.bgpsecResult == SRx_RESULT_UNDEFINED))
+  {
+    // for calling bgpsec verification here
+    IPPrefix*  prefix  = malloc(sizeof(IPPrefix));
+    uint32_t   asn;
+    memset(prefix, 0, sizeof(IPPrefix));
+
+    BGPSecData bgpsecData;
+    memset (&bgpsecData, 0, sizeof(BGPSecData));
+
+    uint8_t* valPtr = (uint8_t*)item->data;
+
+    /* v4 */
+    if (bhdr->type == PDU_SRXPROXY_VERIFY_V4_REQUEST)
+    {
+      SRXPROXY_VERIFY_V4_REQUEST* v4 = (SRXPROXY_VERIFY_V4_REQUEST*)item->data;
+      valPtr += sizeof(SRXPROXY_VERIFY_V4_REQUEST);
+      prefix->ip.version = 4;
+      prefix->length = v4->common.prefixLen;
+      cpyIPv4Address(&prefix->ip.addr.v4, &v4->prefixAddress);
+      asn = ntohl(v4->originAS);
+
+      bgpsecData.numberHops  = ntohs(v4->bgpsecValReqData.numHops);
+      bgpsecData.attr_length = ntohs(v4->bgpsecValReqData.attrLen);
+      bgpsecData.afi        = ntohs(v4->bgpsecValReqData.valPrefix.afi);
+      bgpsecData.safi       = v4->bgpsecValReqData.valPrefix.safi;
+      bgpsecData.local_as   = v4->bgpsecValReqData.valData.local_as;
+    }
+    else /* v6 */
+    {
+    }
+
+    if (bgpsecData.numberHops != 0)
+    {
+      bgpsecData.asPath = (uint32_t*)valPtr;
+    }
+    if (bgpsecData.attr_length != 0)
+    {
+      // bgpsec attribute comes after the as4 path
+      bgpsecData.bgpsec_path_attr = valPtr + (bgpsecData.numberHops * 4);
+    }
+
+    SRxCryptoAPI *srxCAPI = cmdHandler->bgpsecHandler->srxCAPI;
+
+
+    /* making Validation pdu */
+    SCA_BGPSecValidationData valdata;
+    memset(&valdata, 0, sizeof(SCA_BGPSecValidationData));
+    valdata.myAS   = bgpsecData.local_as;
+    valdata.status = API_STATUS_OK;
+    valdata.bgpsec_path_attr = bgpsecData.bgpsec_path_attr;
+
+
+    /* construct NRLI */
+    SCA_Prefix scaPrefix;
+    memset(&scaPrefix, 0, sizeof(SCA_Prefix));
+    scaPrefix.afi    = htons(bgpsecData.afi);
+    scaPrefix.safi   = bgpsecData.safi;
+    scaPrefix.length = prefix->length;
+    scaPrefix.addr.ipV4 = prefix->ip.addr.v4.in_addr;
+    valdata.nlri = &scaPrefix;
+
+    /* call API's validate call */
+    uint8_t bgpsecResult;
+    int valResult = srxCAPI->validate(&valdata);
+    bgpsecResult = valResult == API_VALRESULT_VALID ? SRx_RESULT_VALID
+                                                    : SRx_RESULT_INVALID;
+
+    SRxResult srxRes_mod;
+    srxRes_mod.bgpsecResult = bgpsecResult;
+    srxRes_mod.roaResult    = SRx_RESULT_DONOTUSE; // Indicates this
+
+    /*
+    if (!storeUpdate(cmdHandler->updCache, 0, NULL, &item->dataID,
+                     prefix, asn, &defResInfo, &bgpsecData))
+    {
+      RAISE_SYS_ERROR("Could not store update [0x%08X]!!", updateID);
+      free(prefix);
+    }
+    */
+    if (!modifyUpdateResult(cmdHandler->updCache, &item->dataID, &srxRes_mod))
+    {
+      RAISE_SYS_ERROR("A validation result for a non existing update [0x%08X]!",
+                      updateID);
+    }
+
+    /*
+    // VerifyViaBGPSEC will notify the update cache with the newest result.
+    if (!verifyViaBGPSEC(cmdHandler->rpkiHandler, updateID, &srxRes,
+                         &defRes))
+    {
+      RAISE_SYS_ERROR("Update could not be validated using BGPSEC");
+      processed = false;
+    }
+    */
+
+    free(prefix);
+
+
+  }
+
+
+
+#if defined (_DELEGATION_) // temporarily block
+
   // Only do origin validation if not already performed
   if (originVal && (srxRes.roaResult == SRx_RESULT_UNDEFINED))
   {
@@ -432,21 +541,13 @@ static bool _processUpdateValidation(CommandHandler* cmdHandler,
     }
     free(prefix);
   }
-
-  // Only do bgpdsec path validation if not already performed
-  if (pathVal && (srxRes.bgpsecResult == SRx_RESULT_UNDEFINED))
-  {
-    // VerifyViaBGPSEC will notify the update cache with the newest result.
-    if (!verifyViaBGPSEC(cmdHandler->rpkiHandler, updateID, &srxRes,
-                         &defRes))
-    {
-      RAISE_SYS_ERROR("Update could not be validated using BGPSEC");
-      processed = false;
-    }
-  }
-
+#endif /* _DELEGATION_ */
   return processed;
 }
+
+
+
+
 
 /**
  * This method performs the signing of updates.
