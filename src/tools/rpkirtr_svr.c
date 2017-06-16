@@ -132,6 +132,9 @@ typedef struct {
     /** The IPv6 Address */
     IPv6Address v6;
   } address;
+
+  char* ski;            // Subject Key Identifier
+  char* pPubKeyData;    // Subject Public Key Info
 } ValCacheEntry;
 
 /** Single client */
@@ -423,6 +426,7 @@ void sendPrefixes(int* fdPtr, uint32_t clientSerial, uint16_t clientSessionID,
         uint8_t               v6pdu[sizeof(RPKIIPv6PrefixHeader)];
         RPKIIPv4PrefixHeader* v4hdr = (RPKIIPv4PrefixHeader*)v4pdu;
         RPKIIPv6PrefixHeader* v6hdr = (RPKIIPv6PrefixHeader*)v6pdu;
+        RPKIRouterKeyHeader   rkhdr;
 
         // Basic initialization of data that does NOT change
         v4hdr->version  = RPKI_RTR_PROTOCOL_VERSION;
@@ -434,6 +438,10 @@ void sendPrefixes(int* fdPtr, uint32_t clientSerial, uint16_t clientSessionID,
         v6hdr->type     = PDU_TYPE_IP_V6_PREFIX;
         v6hdr->reserved = 0;
         v6hdr->length   = htonl(sizeof(RPKIIPv6PrefixHeader));
+
+        rkhdr.version   = RPKI_RTR_PROTOCOL_VERSION;
+        rkhdr.type      = PDU_TYPE_ROUTER_KEY;
+        rkhdr.zero      = 0;
 
         // helps to find the next serial number
         SListNode*  currNode;
@@ -469,6 +477,27 @@ void sendPrefixes(int* fdPtr, uint32_t clientSerial, uint16_t clientSessionID,
           if (   (cEntry->serial != cEntry->prevSerial)
               && (cEntry->prevSerial > clientSerial))
           {
+            continue;
+          }
+
+          // Send 'Router Key'
+          if( cEntry->prefixLength == 0 && cEntry->prefixMaxLength == 0 &&
+              cEntry->ski && cEntry->pPubKeyData)
+
+          {
+            rkhdr.flags     = cEntry->flags;
+            memcpy(&rkhdr.ski, cEntry->ski, 20);
+            memcpy(&rkhdr.keyInfo, cEntry->pPubKeyData, 91);
+            rkhdr.as        = cEntry->asNumber;
+            rkhdr.length    = htonl(sizeof(RPKIRouterKeyHeader));
+
+            OUTPUTF(false, "Sending an 'Router Key' (serial = %u)\n",
+                    cEntry->serial);
+            if (!sendNum(fdPtr, &rkhdr, sizeof(RPKIRouterKeyHeader)))
+            {
+              ERRORF("Error: Failed to send a 'Prefix'\n");
+              break;
+            }
             continue;
           }
 
@@ -1465,6 +1494,150 @@ bool appendPrefixData(char* arg, bool fromFile)
   return succ;
 }
 
+
+#define CHAR_CONV_CONST     0x37
+#define DIGIT_CONV_CONST    0x30
+#define LEN_BYTE_NIBBLE     0x02
+
+unsigned char hex2bin_byte(char* in)
+{
+  unsigned char result=0;
+  int i=0;
+  for(i=0; i < LEN_BYTE_NIBBLE; i++)
+  {
+    if(in[i] > 0x40)
+      result |= ((in[i] - CHAR_CONV_CONST) & 0x0f) << (4-(i*4));
+    else if(in[i] > 0x30 && in[i] < 0x40)
+      result |= (in[i] - DIGIT_CONV_CONST) << (4-(i*4));
+  }
+  return result;
+}
+
+
+#define KEY_BIN_SIZE 91
+#define SKI_SIZE     20
+#define MAX_CERT_READ_SIZE 260
+#define OFFSET_PUBKEY 170
+#define OFFSET_SKI 130
+#define COMMAND_BUF_SIZE 256
+bool readRouterKeyData(const char* arg, SList* dest, uint32_t serial, bool isFile)
+{
+
+  char  buffKey[KEY_BIN_SIZE];
+  char  buffSKI_asc[SKI_SIZE*2];
+  char  buffSKI_bin[SKI_SIZE];
+  uint16_t keyLength, skiLength;
+  FILE*   fpKey;
+  ValCacheEntry* cEntry;
+
+  char           streamBuf[COMMAND_BUF_SIZE];
+  char*          bptr;
+  strncpy(streamBuf, arg, COMMAND_BUF_SIZE);
+  stripLineBreak(streamBuf);
+  bptr = streamBuf;
+
+  char*          fields[2];
+  fields[0] = strsep(&bptr, " \t");
+  fields[1] = strsep(&bptr, " \t");
+
+  // Load the router certificate in DER format
+  if (isFile)
+  {
+    // TODO: need to read certificate file
+    fpKey = fopen (fields[1], "rb");
+    if (fpKey == NULL)
+    {
+      ERRORF("Error: Failed to open '%s'\n", fields[1]);
+      return false;
+    }
+    // TODO: need to read a certificate and
+    // parsing pubkey part and SKI
+    //
+    fseek(fpKey, OFFSET_PUBKEY, SEEK_SET);
+    keyLength = (u_int16_t)fread (&buffKey, sizeof(char), KEY_BIN_SIZE, fpKey);
+
+    if (keyLength != KEY_BIN_SIZE)
+    {
+      ERRORF("Error: Failed to read, key size mismatch\n");
+      return false;
+    }
+
+    fseek(fpKey, OFFSET_SKI, SEEK_SET);
+    // read two times of SKI_SIZE(20 bytes) because of being written in a way of ASCII
+    skiLength = (u_int16_t)fread (&buffSKI_asc, sizeof(char), SKI_SIZE*2, fpKey);
+
+    int i;
+    for(i=0; i< SKI_SIZE; i++)
+      buffSKI_bin[i] = hex2bin_byte(buffSKI_asc+(i*2));
+
+  }
+  else
+  {
+    if (fields[1] == NULL)
+    {
+      ERRORF("Error: Data missing: \n");
+      return false;
+    }
+  }
+
+  // new instance to append
+  cEntry = (ValCacheEntry*)appendToSList(dest, sizeof(ValCacheEntry));
+  if (cEntry == NULL)
+  {
+    fclose(fpKey);
+    return false;
+  }
+  cEntry->serial  = cEntry->prevSerial = serial++;
+  cEntry->expires = 0;
+  cEntry->flags           = PREFIX_FLAG_ANNOUNCEMENT;
+  cEntry->prefixLength    = 0;
+  cEntry->prefixMaxLength = 0;
+  cEntry->isV6 = false;
+  cEntry->address.v4.in_addr.s_addr= 0;
+
+
+  cEntry->asNumber = htonl(strtoul(fields[0], NULL, 10));
+  cEntry->ski = (char*) calloc(1, SKI_SIZE);
+  cEntry->pPubKeyData   = (char*) calloc(1, KEY_BIN_SIZE);
+
+  memcpy(cEntry->ski, buffSKI_bin, SKI_SIZE);
+  memcpy(cEntry->pPubKeyData, buffKey, KEY_BIN_SIZE);
+
+  if (isFile)
+    fclose(fpKey);
+
+  return true;
+}
+
+
+bool appendRouterKeyData(char* arg, bool fromFile)
+{
+
+  size_t  numBefore, numAdded;
+  bool    succ;
+
+  acquireReadLock(&cache.lock);
+  numBefore = sizeOfSList(&cache.entries);
+
+  changeReadToWriteLock(&cache.lock);
+
+  // TODO: function for certificate reading
+  succ = readRouterKeyData(arg, &cache.entries, cache.maxSerial+1, fromFile);
+
+  changeWriteToReadLock(&cache.lock);
+
+  numAdded = succ ? (sizeOfSList(&cache.entries) - numBefore) : 0;
+  cache.maxSerial += numAdded;
+  unlockReadLock(&cache.lock);
+
+
+  if (numAdded > 0)
+  {
+    service.notify = true;
+  }
+  return succ;
+}
+
 /**
  * This method adds the RPKI cache entry into the test hareness. The format
  * is IP/len max AS
@@ -1499,6 +1672,14 @@ int appendPrefixNow(char* line)
   {
     sendSerialNotifyToAllClients();
   }
+  return CMD_ID_ADDNOW;
+}
+
+int appendRouterKey(char* fileName)
+{
+
+  bool returnVal = appendRouterKeyData(fileName, true);
+
   return CMD_ID_ADDNOW;
 }
 
@@ -1924,6 +2105,7 @@ int handleLine(char* line)
   CMD_CASE("append",    appendPrefixFile);
   CMD_CASE("add",       appendPrefix);
   CMD_CASE("addNow",    appendPrefixNow);
+  CMD_CASE("addKey",    appendRouterKey);
   CMD_CASE("remove",    removeEntries);
   CMD_CASE("removeNow", removeEntriesNow);
   CMD_CASE("error",     issueErrorReport);

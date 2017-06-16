@@ -4,20 +4,20 @@
  * their official duties. Pursuant to title 17 Section 105 of the United
  * States Code this software is not subject to copyright protection and
  * is in the public domain.
- * 
+ *
  * NIST assumes no responsibility whatsoever for its use by other parties,
  * and makes no guarantees, expressed or implied, about its quality,
  * reliability, or any other characteristic.
- * 
+ *
  * We would appreciate acknowledgment if the software is used.
- * 
+ *
  * NIST ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS" CONDITION AND
  * DISCLAIM ANY LIABILITY OF ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING
  * FROM THE USE OF THIS SOFTWARE.
- * 
- * 
+ *
+ *
  * This software might use libraries that are under GNU public license or
- * other licenses. Please refer to the licenses of all libraries required 
+ * other licenses. Please refer to the licenses of all libraries required
  * by this software.
  *
  * RPKI/Router definitions.
@@ -32,7 +32,7 @@
  * 0.3.0.10 - 2015/11/09 - oborchert
  *            * Removed types.h
  * 0.3.0    - 2013/01/28 - oborchert
- *            * Update to be compliant to draft-ietf-sidr-rpki-rtr.26. This 
+ *            * Update to be compliant to draft-ietf-sidr-rpki-rtr.26. This
  *              update does not include the secure protocol section. The protocol
  *              will still use un-encrypted plain TCP
  *            * Removed invalid PDU type: PDU_TYPE_UNKNOWN.
@@ -48,8 +48,8 @@
 
 #include "util/prefix.h"
 
-/** 
- * PDU Types 
+/**
+ * PDU Types
  */
 typedef enum {
   PDU_TYPE_SERIAL_NOTIFY  = 0,  // 5.2
@@ -60,7 +60,8 @@ typedef enum {
   PDU_TYPE_IP_V6_PREFIX   = 6,  // 5.7
   PDU_TYPE_END_OF_DATA    = 7,  // 5.8
   PDU_TYPE_CACHE_RESET    = 8,  // 5.9
-  PDU_TYPE_ERROR_REPORT   = 10, // 5.10
+  PDU_TYPE_ROUTER_KEY     = 9,  // 5.10
+  PDU_TYPE_ERROR_REPORT   = 10, // 5.11
   PDU_TYPE_RESERVED       = 255
 } RPKIRouterPDUType;
 
@@ -83,7 +84,7 @@ typedef enum {
 #define PREFIX_FLAG_ANNOUNCEMENT  0x01
 
 /** The current protocol implementation. */
-#define RPKI_RTR_PROTOCOL_VERSION 0;
+#define RPKI_RTR_PROTOCOL_VERSION 1;
 
 //
 // The following types could be optimized but
@@ -139,7 +140,7 @@ typedef struct {
   uint8_t     type;        // TYPE_IP_V4_PREFIX
   uint16_t    reserved;    // Reserved
   uint32_t    length;      // 20 bytes
-  uint8_t     flags;      
+  uint8_t     flags;
   uint8_t     prefixLen;   // 0..32
   uint8_t     maxLen;      // 0..32
   uint8_t     zero;        // zero
@@ -162,6 +163,23 @@ typedef struct {
   IPv6Address addr;
   uint32_t    as;
 } __attribute__((packed)) RPKIIPv6PrefixHeader;
+
+
+/**
+ * Defines a PDU for Router Key
+ */
+typedef struct {
+  uint8_t     version;     // Version - always '0'
+  uint8_t     type;        // TYPE_ROUTER_KEY
+  uint8_t     flags;        //
+  uint8_t     zero;        // zero
+  uint32_t    length;      // 32 bytes
+  uint8_t     ski[20];     // Subject Key Identifier 20 octets
+  uint32_t    as;          // 4 bytes AS number
+  uint8_t     keyInfo[91]; // Subject Public Key Info 91 bytes DER
+} __attribute__((packed)) RPKIRouterKeyHeader;
+
+
 
 /**
  * PDU EndOfData
