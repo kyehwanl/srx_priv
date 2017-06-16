@@ -49,7 +49,7 @@
 #include "util/io_util.h"
 
 /** The default RPKI port (rfc6810) */
-#define DEF_RPKI_PORT  /*323*/ 50001
+#define DEF_RPKI_PORT  323
 #define DEF_RPKI_CACHE "localhost";
 #define DEF_FMT_AN "+ %u %s(%u)"
 #define DEF_FMT_WD "+ %u %s(%u)"

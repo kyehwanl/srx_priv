@@ -506,6 +506,7 @@ static bool _processUpdateValidation(CommandHandler* cmdHandler,
 
 
 #if defined (_DELEGATION_) // temporarily block
+#endif /* _DELEGATION_ */
 
   // Only do origin validation if not already performed
   if (originVal && (srxRes.roaResult == SRx_RESULT_UNDEFINED))
@@ -541,7 +542,6 @@ static bool _processUpdateValidation(CommandHandler* cmdHandler,
     }
     free(prefix);
   }
-#endif /* _DELEGATION_ */
   return processed;
 }
 

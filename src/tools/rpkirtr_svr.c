@@ -180,7 +180,7 @@ typedef struct {
 #define CMD_ID_RUN       17
 #define CMD_ID_SLEEP     18
 
-#define DEF_RPKI_PORT    /*323*/ 50001
+#define DEF_RPKI_PORT    323
 #define UNDEF_VERSION    -1
 /*----------
  * Constants
