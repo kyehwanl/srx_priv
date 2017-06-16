@@ -25,12 +25,12 @@
  * queue is fed by the srx-proxy communication thread.
  *
  *
- * @version 0.3.0.10
+ * @version 0.5.0.0
  *
  * Changelog:
  * -----------------------------------------------------------------------------
- * 0.3.0.10 - 2016/01/21 - kyehwanl
- *            * added pthread handler function for unexpected error
+ * 0.5.0.0  - - kyehwanl
+ *            * Added BGPsec processing
  * 0.3.0.10 - 2015/11/09 - oborchert
  *            * Removed unused variables from functions _processHandshake,
  *              handleCommands, _processUpdateValidation, and broadcastResult

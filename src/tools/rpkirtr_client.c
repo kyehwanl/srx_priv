@@ -22,11 +22,15 @@
  * Connects to an RPKI/Router Protocol server and prints all received
  * information on stdout.
  *
- * @version 0.4.1.0
+ * @version 0.5.0.0
  *
  * Changelog:
  * -----------------------------------------------------------------------------
- *  0.4.1.0 - 2016/09/29 - oborchert
+ *  0.5.0.0 - 2017/06/16 - kyehwanl
+ *            * Updated code to use RFC8210 (former 6810-bis-9) 
+ *          - 2017/06/16 - oborchert
+ *            * Version 0.4.1.0 is trashed and moved to 0.5.0.0
+ *          - 2016/09/29 - oborchert
  *            * Modified test tool to be used as a receiver.
  *  0.3.0.0 - 2013/01/28 - oborchert
  *            * Update to be compliant to draft-ietf-sidr-rpki-rtr.26. This
@@ -58,7 +62,7 @@
 /**
  * Static parameter that specifies if this runs program in debug mode or not.
  *
- * @since 0.4.1.0
+ * @since 0.5.0.0
  */
 static bool st_debug   = false;
 
@@ -71,20 +75,20 @@ static bool st_verbose = false;
  * Static parameter that indicates if this program should only perform a single
  * request.
  *
- * @since 0.4.1.0
+ * @since 0.5.0.0
  */
 static bool st_single_request = false;
 
 /**
  * Static parameter for prefix announcement format string
  *
- * @since 0.4.1.0
+ * @since 0.5.0.0
  */
 static char st_add_format[256] = {DEF_FMT_AN "\n\0"};
 /**
  * Static parameter for prefix withdrawal format string
  *
- * @since 0.4.1.0
+ * @since 0.5.0.0
  */
 static char st_del_format[256] = {DEF_FMT_WD "\n\0"};
 /*
@@ -207,7 +211,7 @@ void sessionIDEstablished (uint32_t valCacheID, uint16_t newSessionID)
  *
  * @param Program name
  *
- * @since 0.4.1.0
+ * @since 0.5.0.0
  */
 void syntax(const char* prgName)
 {
@@ -237,7 +241,7 @@ void syntax(const char* prgName)
  *
  * @return false if the program has to exit.
  *
- * @since 0.4.1.0
+ * @since 0.5.0.0
  */
 bool parseParams(int argc, char** argv, RPKIRouterClientParams* params,
                  int* exitVal)

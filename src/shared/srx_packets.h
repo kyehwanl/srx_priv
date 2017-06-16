@@ -24,10 +24,12 @@
  * other licenses. Please refer to the licenses of all libraries required
  * by this software.
  *
- * @version 0.4.0.0
+ * @version 0.5.0.0
  *
  * Changelog:
  * -----------------------------------------------------------------------------
+ * 0.5.0.0  - 2017/06/16 - kyehwanl
+ *            * added local as to BGPSEC_DATA_PTR
  * 0.4.0.0  - 2016/06/19 - oborchert
  *            * Moved the proxy-srx-server protocol to version 2.
  *            * Split BGPSecValData into BGPSecValReqData and BGPSecValResData.

@@ -20,10 +20,12 @@
  * other licenses. Please refer to the licenses of all libraries required
  * by this software.
  *
- * @version 0.3.0.10
+ * @version 0.5.0.0
  *
  * Changelog:
  * -----------------------------------------------------------------------------
+ * 0.5.0.0 - 2017/06/16 - oborchert
+ *           * BZ1061 fixed issue with platform dependent int type in libconfig.
  * 0.3.0.10- 2016-01-08 - oborchert
  *           * Fixed type cast problems in during configuration.
  *         - 2015/11/10 - oborchert
@@ -566,13 +568,13 @@ int parseProgramArgs(Configuration* self, int argc, const char** argv,
  */
 bool readConfigFile(Configuration* self, const char* filename)
 {
-  bool ret = false;      // By default something went wrong
-  static config_t   cfg; // BZ647 changed to static.
-  config_setting_t* sett   = NULL;
-  const char*       strtmp = NULL;
-  bool useSyslog = 0;
-  int  boolVal   = 0;
-  long intVal    = 0;
+  bool              ret       = false; // By default something went wrong
+  static config_t   cfg;               // BZ647 changed to static.
+  config_setting_t* sett      = NULL;
+  const char*       strtmp    = NULL;
+  bool              useSyslog = 0;
+  int               boolVal   = 0;
+  LCONFIG_INT       intVal    = 0;     // BZ1061 fixed type
 
   // Added intVal to not have the libconfig library modify the configuration
   // structure. This caused all kinds of memory mess-up. The new procedure is

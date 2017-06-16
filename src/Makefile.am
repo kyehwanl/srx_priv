@@ -106,6 +106,7 @@ srx_server_SOURCES = $(SERVER_DIR)/bgpsec_handler.c \
 		     $(SERVER_DIR)/configuration.c \
 		     $(SERVER_DIR)/console.c \
 		     $(SERVER_DIR)/key_cache.c \
+		     $(SERVER_DIR)/ski_cache.c \
 		     $(SERVER_DIR)/main.c \
 		     $(SERVER_DIR)/prefix_cache.c \
 		     $(SERVER_DIR)/rpki_handler.c \
@@ -163,6 +164,7 @@ noinst_HEADERS = $(CLIENT_DIR)/client_connection_handler.h \
 		 $(SERVER_DIR)/configuration.h \
 		 $(SERVER_DIR)/console.h \
 		 $(SERVER_DIR)/key_cache.h \
+		 $(SERVER_DIR)/ski_cache.h \
 		 $(SERVER_DIR)/prefix_cache.h \
 		 $(SERVER_DIR)/rpki_handler.h \
 		 $(SERVER_DIR)/rpki_router_client.h \

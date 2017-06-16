@@ -22,21 +22,23 @@
  *
  * This handler processes ROA validation
  *
- * @version 0.3.0
+ * @version 0.5.0.0
  *
  * Changelog:
  * -----------------------------------------------------------------------------
- *   0.3.0 - 2013/01/28 - oborchert
- *           * Update to be compliant to draft-ietf-sidr-rpki-rtr.26. This
- *             update does not include the secure protocol section. The protocol
- *             will still use un-encrypted plain TCP
- *   0.2.0 - 2011/01/07 - oborchert
- *           * Changelog added with version 0.2.0 and date 2011/01/07
- *           * Version tag added
- *           * Applied changed return value of getOriginStatus (prefix_cache.h)
- *             to method validatePrefixOrigin
- *   0.1.0 - 2010/04/15 - pgleichm
- *           * Code Created
+ *  0.5.0.0 - 2017/06/16 - kyehwanl
+ *            * Added handling of router keys
+ *  0.3.0.0 - 2013/01/28 - oborchert
+ *            * Update to be compliant to draft-ietf-sidr-rpki-rtr.26. This
+ *              update does not include the secure protocol section. The protocol
+ *              will still use un-encrypted plain TCP
+ *  0.2.0.0 - 2011/01/07 - oborchert
+ *            * Changelog added with version 0.2.0 and date 2011/01/07
+ *            * Version tag added
+ *            * Applied changed return value of getOriginStatus (prefix_cache.h)
+ *              to method validatePrefixOrigin
+ *  0.1.0.0 - 2010/04/15 - pgleichm
+ *            * Code Created
  * -----------------------------------------------------------------------------
  */
 

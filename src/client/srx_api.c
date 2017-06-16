@@ -23,10 +23,12 @@
  * Secure Routing extension (SRx) client API - This API provides a fully
  * functional proxy client to the SRx server.
  *
- * Version: 0.4.0.0
+ * Version: 0.5.0.0
  *
  * Changelog:
  * -----------------------------------------------------------------------------
+ * 0.5.0.0  - 2017/06/16 - kyehwanl
+ *            * Added values to bgpsecValRegData for remote BGPsec processing.
  * 0.4.0.0  - 2016/06/19 - oborchert
  *            * redesigned the BGPSEC data blob and adjusted the code
  *              accordingly

@@ -25,11 +25,15 @@
  *
  * Uses log.h for error reporting
  *
- * @version 0.4.1.0
+ * @version 0.5.0.0
  *
  * Changelog:
  * -----------------------------------------------------------------------------
- * 0.4.1.0  - 2016/08/30 - oborchert
+ * 0.5.0.0  - 2017/06/16 - kyehwanl
+ *            * Added router key callback function pointer
+ *          - 2017/06/16 - oborchert
+ *            * Version 0.4.1.0 is trashed and moved to 0.5.0.0
+ *          - 2016/08/30 - oborchert
  *            * Added parameter 'stopAfterEndOfData' to structure
  *              RPKIRouterClient.
  * 0.3.0.10 - 2015/11/09 - oborchert
@@ -213,7 +217,7 @@ typedef struct {
   /** Is used to allow the receiver thread of ending after the END OF DATA is
    * received. This is used in the rpkirtr_client tool to allow single requests
    * without continuous polling.
-   * @since 0.4.1.0 */
+   * @since 0.5.0.0 */
   bool                     stopAfterEndOfData;
 } RPKIRouterClient;
 

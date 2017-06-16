@@ -28,11 +28,15 @@
  * - Removed, i.e. withdrawn routes are kept for one hour
  *   (see CACHE_EXPIRATION_INTERVAL)
  *
- * @version 0.4.1.0
+ * @version 0.5.0.0
  *
  * Changelog:
  * -----------------------------------------------------------------------------
- * 0.4.1.0  - 2016/08/30 - oborchert
+ * 0.5.0.0  - 2017/06/16 - kyehwanl
+ *            * Updated code to use RFC8210 (former 6810-bis-9) 
+ *          - 2017/06/16 - oborchert
+ *            * Version 0.4.1.0 is trashed and moved to 0.5.0.0
+ *          - 2016/08/30 - oborchert
  *            * Added a proper configuration section.
  *          - 2016/08/26 - oborchert
  *            * Changed client list display from using index to file descriptor
@@ -151,7 +155,7 @@ typedef struct {
  * This configuration structure allows to pass some more configuration settings
  * to the server.
  *
- * @since 0.4.1.0
+ * @since 0.5.0.0
  */
 typedef struct {
   /** The configured port */
@@ -2275,7 +2279,7 @@ bool setupService()
  *
  * @param prgName The program name.
  *
- * @since 0.4.1.0
+ * @since 0.5.0.0
  */
 static void syntax(const char* prgName)
 {
@@ -2301,7 +2305,7 @@ static void syntax(const char* prgName)
  *
  * @return true if the program can continue, false if it should be ended.
  *
- * @since 0.4.1.0
+ * @since 0.5.0.0
  */
 static bool parseParams(int argc, const char* argv[],
                         RPKI_SRV_Configuration* cfg, int* exitVal)

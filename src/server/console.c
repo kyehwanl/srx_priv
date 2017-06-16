@@ -20,11 +20,13 @@
  * other licenses. Please refer to the licenses of all libraries required
  * by this software.
  *
- * @version 0.4.1.0
+ * @version 0.5.0.0
  *
  * Changelog:
  * -----------------------------------------------------------------------------
- * 0.4.1.0  - 2016/10/26 - oborchert
+ * 0.5.0.0  - 2017/06/16 - oborchert
+ *            * Version 0.4.1.0 is trashed and moved to 0.5.0.0
+ *          - 2016/10/26 - oborchert
  *            * BZ1037: Replaces legacy calls to bzero with memset
  * 0.3.0.10 - 2016/01/21 - kyehwanl
  *            * added pthread cancel function for enabling keyboard interrupt

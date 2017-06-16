@@ -24,27 +24,29 @@
 /**
  * Contains Constants and its definitions for SRX client/server and protocol.
  *
- * @version 0.3.0
+ * @version 0.5.0.0
  *
  * SRx constant and type definitions.
  *
  * Change log:
  * -----------------------------------------------------------------------------
- *   0.4.0 - 2016/06/19 - oborchert
- *           * Modified the BGPSecData structure.
- *   0.3.0 - 2013/03/01 - oborchert
- *           * Added define for unusable ASN RFC6483, used ASN of number space
- *             for documentation examples RFC5398
- *         - 2012/12/07 - oborchert
- *           * Organized version control.
- *   0.2.0 - 2011/01/07 - oborchert
- *           * Change log added with version 0.2.0 and date 2011/01/07
- *           * Version tag added
- *           * Updated all
- *           * M0000722 fixed wrong declaration of SRxVerificationMethod.
- *           * Added SRX_RES_ERROR to allow error detection within validation.
- *   0.1.0 - 2010/08/04 - pgleichm
- *           * Code Created
+ *  0.5.0.0 - 2017/06/16 - kyehwanl
+ *            * Added variables to BGPSecData
+ *  0.4.0.0 - 2016/06/19 - oborchert
+ *            * Modified the BGPSecData structure.
+ *  0.3.0.0 - 2013/03/01 - oborchert
+ *            * Added define for unusable ASN RFC6483, used ASN of number space
+ *              for documentation examples RFC5398
+ *          - 2012/12/07 - oborchert
+ *            * Organized version control.
+ *  0.2.0.0 - 2011/01/07 - oborchert
+ *            * Change log added with version 0.2.0 and date 2011/01/07
+ *            * Version tag added
+ *            * Updated all
+ *            * M0000722 fixed wrong declaration of SRxVerificationMethod.
+ *            * Added SRX_RES_ERROR to allow error detection within validation.
+ *  0.1.0.0 - 2010/08/04 - pgleichm
+ *            * Code Created
  * -----------------------------------------------------------------------------
  *
  */

@@ -23,11 +23,13 @@
  * Function to create a server-socket and to start/stop a server runloop.
  * Provides functionality to handle the SRx server socket.
  *
- * @version 0.4.1.0
+ * @version 0.5.0.0
  *
  * Changelog:
  * -----------------------------------------------------------------------------
- *  0.4.1.0 - 2016/08/19 - oborchert
+ *  0.5.0.0 - 2017/06/16 - oborchert
+ *            * Version 0.4.1.0 is trashed and moved to 0.5.0.0
+ *  0.5.0.0 - 2016/08/19 - oborchert
  *            * Moved socket connection error strings to this header file.
  *  0.3.0.0 - 2013/01/04 - oborchert
  *            * Added parameter goodByeReceived to ClientThread structure.
@@ -83,7 +85,7 @@
 #define MAX_PENDING_CONNECTIONS 5
 
 ////////////////////////////////////////////////////////////////////////////////
-// ERROR STRINGS - Moved from code to here with version 0.4.1.0
+// ERROR STRINGS - Moved from code to here with version 0.5.0.0
 ////////////////////////////////////////////////////////////////////////////////
 
 #define SOC_ERR_EADDRINUSE   "The specified address is already in use."

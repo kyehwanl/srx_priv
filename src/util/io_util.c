@@ -17,11 +17,13 @@
  * 
  * This file contains utility functions for reading from standard input.
  *  
- * @version 0.4.1.0
+ * @version 0.5.0.0
  *
  * ChangeLog:
  * -----------------------------------------------------------------------------
- * 0.4.1.0 - 2018/08/30 - oborchert
+ * 0.5.0.0  - 2017/06/16 - oborchert
+ *            * Version 0.4.1.0 is trashed and moved to 0.5.0.0
+ *         - 2018/08/30 - oborchert
  *           * Code Created
  * -----------------------------------------------------------------------------
  */

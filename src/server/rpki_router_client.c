@@ -22,11 +22,13 @@
  *
  * Provides the code for the SRX-RPKI router client connection.
  *
- * @version 0.4.1.0
+ * @version 0.5.0.0
  *
  * Changelog:
  * -----------------------------------------------------------------------------
- * 0.4.1.0  - 2016/08/30 - oborchert
+ * 0.5.0.0  - 2017/06/16 - oborchert
+ *            * Version 0.4.1.0 is trashed and moved to 0.5.0.0
+ *          - 2016/08/30 - oborchert
  *            * Added capability to only have the receiving of PDU's done once
  *              by using the clients stopAfterEndofData attribute rather than a
  *              hard coded bool value in manageConnection.
@@ -463,7 +465,7 @@ static void* manageConnection (void* clientPtr)
     {
       // Receive and process all PDUs - This is a loop until the connection
       // is either lost, closed, or the end of data is received (single request)
-      // Modified call with 0.4.1.0 to use variable as second parameter rather
+      // Modified call with 0.5.0.0 to use variable as second parameter rather
       // than false
       receivePDUs(client, client->stopAfterEndOfData);
       if (client->stopAfterEndOfData)

@@ -25,7 +25,7 @@
  * In this version the SRX server only can connect to once RPKI VALIDATION CACHE
  * MULTI CACHE will be part of a later release.
  *
- * @version 0.3.0.10
+ * @version 0.5.0.0
  *
  * EXIT Values:
  *
@@ -38,6 +38,8 @@
  *
  * Changelog:
  * -----------------------------------------------------------------------------
+ * 0.5.0.0  - 2017/06/16 - kyehwanl
+ *            * Added SRxCryproAPI
  * 0.3.0.10 - 2015/11/10 - oborchert
  *            * Removed unused static colsoleLoop
  * 0.3.0.7  - 2015/04/21 - oborchert
@@ -131,8 +133,9 @@ static bool cleanupRequired = false;
 // To allow to use it already ;-)
 static void doCleanupHandlers(int handler);
 
+/** Holds the SRxCryptoAPI */
+SRxCryptoAPI* g_capi = NULL;
 
-SRxCryptoAPI *g_capi;
 ////////////////////
 // Server Call backs
 ////////////////////
@@ -501,6 +504,11 @@ void shutDown()
   raise(15);
 }
 
+/**
+ * Return the pointer to CAPI
+ * 
+ * @return the pointer to CAPI
+ */
 SRxCryptoAPI* getSrxCAPI()
 {
   return g_capi;
@@ -542,7 +550,7 @@ int main(int argc, const char* argv[])
   LOG(LEVEL_DEBUG, "([0x%08X]) > Start Main SRx server thread.", pthread_self());
 
 
-  // srxcryphtoapi INIT
+  // srxcryptoapi INIT
   g_capi = malloc(sizeof(SRxCryptoAPI));
   memset (g_capi, 0, sizeof(SRxCryptoAPI));
   sca_status_t sca_status = API_STATUS_OK;

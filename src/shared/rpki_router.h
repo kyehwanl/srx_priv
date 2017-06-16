@@ -22,11 +22,15 @@
  *
  * RPKI/Router definitions.
  *
- * @version 0.4.1.0
+ * @version 0.5.0.0
  *
  * Changelog:
  * -----------------------------------------------------------------------------
- * 0.4.1.0  - 2016/08/26 - oborchert
+ * 0.5.0.0  - 2017/06/16 - kyehwanl
+ *            * Updated to follow RFC8210 (former 6810-bis-9)
+ *          - 2017/06/16 - oborchert
+ *            * Version 0.4.1.0 is trashed and moved to 0.5.0.0
+ *          - 2016/08/26 - oborchert
  *            * Replaced global pragma statement with __attribute__((packed))
  *              statement for types that need it.
  * 0.3.0.10 - 2015/11/09 - oborchert

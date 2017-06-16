@@ -20,10 +20,12 @@
  * other licenses. Please refer to the licenses of all libraries required 
  * by this software.
  *
- * @version 0.3.0.10
+ * @version 0.5.0.0
  *
  * Changelog:
  * -----------------------------------------------------------------------------
+ * 0.5.0.0  - 2017/06/16 - oborchert
+ *            * BZ1061 fixed issue with platform dependent int type in libconfig
  * 0.3.0.10 - 2015/11/09 - oborchert
  *            * Removed types.h
  * 0.3.0    - 2014/11/17 - oborchert
@@ -49,6 +51,12 @@
 //static char* DEFAULT_CONSOLE_PASSWORD = "SRxSERVER";
 
 #define MAX_PROXY_MAPPINGS 256 
+
+// CONFIG_INT will be set to int for 64 bit platform during configure. See
+// configuration.ac - used for libconfig 
+#ifndef LCONFIG_INT
+#define LCONFIG_INT long
+#endif
 
 /**
  * Destination for messages (errors, information).

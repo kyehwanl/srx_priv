@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.63])
-AC_INIT([SRx], [0.4.1.0], [bgpsrx-dev@nist.gov])
+AC_INIT([SRx], [0.5.0.0], [bgpsrx-dev@nist.gov])
 # The -Wno=portability is needed for the $(shell...) GNU extension.
 # If this is a problem remove the $(shell...) extension in Makefile_Common. 
 AM_INIT_AUTOMAKE([-Wall -Werror -Wno-portability])
@@ -238,6 +238,38 @@ AC_SEARCH_LIBS([pthread_create], [pthread],
 	--------------------------------------------------])])
 
 ##
+## CHECK FOR config library
+##
+have_config=no
+AC_SEARCH_LIBS([config_init], [config], [have_config=yes])
+if test "${have_config}" = no; then
+  AC_MSG_ERROR([
+	--------------------------------------------------
+	The config library required to build srx_server.
+	For Fedora/CentOS please install "libconfig"
+	--------------------------------------------------])
+else  
+  AC_CHECK_HEADERS([libconfig.h], [have_headers=yes], [have_headers=no])
+  if test "${have_headers}" = no; then
+    AC_MSG_ERROR([
+    --------------------------------------------------
+    libconfig.h is missing, install the libconfig 
+    header. For fedora/CentOS install libconfig-devel.
+    --------------------------------------------------])
+  fi
+  # Now specify which int type to use which depends on the library type.
+  AC_MSG_CHECKING(for libconfig int type)
+  /sbin/ldconfig -v 2>/dev/null | grep libconfig.so.8 > /dev/null
+  if test "$?" = "0"; then      
+    LCONFIG_INT=long
+  else
+    LCONFIG_INT=int
+  fi
+  CFLAGS="$CFLAGS -DLCONFIG_INT=$LCONFIG_INT"
+  AC_MSG_RESULT($LCONFIG_INT)
+fi
+
+##
 ## Library: SRxCryptoAPI - Starting with version >= 0.4.0
 ##
 if test ${include_sca} = yes ; then
@@ -393,7 +425,6 @@ AC_CHECK_HEADERS([ \
                   errno.h \
                   fcntl.h \
                   getopt.h \
-                  libconfig.h \
                   malloc.h \
                   netdb.h \
                   patricia.h \
