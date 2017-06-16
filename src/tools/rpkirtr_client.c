@@ -119,6 +119,37 @@ void printReset()
   LOG(LEVEL_INFO, "Received a Cache Reset");
 }
 
+__attribute__((always_inline)) inline void printHex(int len, unsigned char* buff)
+{
+  int i;
+  for(i=0; i < len; i++ )
+  {
+    if(i%16 ==0) printf("\n");
+    printf("%02x ", buff[i]);
+  }
+  printf("\n");
+}
+void handleRouterKey(uint32_t valCacheID, uint16_t sessionID, bool isAnn,
+                     uint32_t oas, const char* ski, const char* keyInfo,
+                     void* _u)
+{
+
+
+  LOG(LEVEL_DEBUG, "[Prefix] %s (vcd=0x%08X sessionID=0x%04X): "
+      "as=%u", (isAnn ? "Ann" : "Wd"), valCacheID, sessionID,
+      oas);
+
+  printf(" ski[%p]: ", ski);
+  printHex(20, ski);
+  printf("\n");
+
+  printf(" keyInfo[%p]: ", keyInfo);
+  printHex(91, keyInfo);
+
+}
+
+
+
 /**
  * Print the error code and message. Returns true for keeping the connection
  * active only for non fatal Error "No Data Available".
@@ -360,6 +391,7 @@ int main(int argc, const char* argv[])
   params.prefixCallback               = printPrefix;
   params.resetCallback                = printReset;
   params.errorCallback                = handleError;
+  params.routerKeyCallback            = handleRouterKey;
   params.connectionCallback           = handleConnection;
   params.sessionIDChangedCallback     = sessionIDChanged;
   params.sessionIDEstablishedCallback = sessionIDEstablished;

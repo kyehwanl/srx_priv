@@ -27,8 +27,8 @@
  * Changelog:
  * -----------------------------------------------------------------------------
  * 0.4.1.0  - 2016/08/30 - oborchert
- *            * Added capability to only have the receiving of PDU's done once 
- *              by using the clients stopAfterEndofData attribute rather than a 
+ *            * Added capability to only have the receiving of PDU's done once
+ *              by using the clients stopAfterEndofData attribute rather than a
  *              hard coded bool value in manageConnection.
  * 0.3.0.10 - 2016/01/21 - kyehwanl
  *            * added pthread cancel state for enabling keyboard interrupt
@@ -180,6 +180,29 @@ static int handleErrorReport(RPKIRouterClient* client,
   return returnVal;
 }
 
+
+
+static bool processPDURouterKey(RPKIRouterClient* client,
+                             RPKIRouterKeyHeader* hdr)
+{
+  bool      isAnn;
+  uint32_t  clientID;
+  uint16_t  sessionID;
+  uint8_t*  ski;
+  uint8_t*  keyInfo;
+
+
+
+  isAnn     = (hdr->flags & PREFIX_FLAG_ANNOUNCEMENT);
+  clientID  = client->routerClientID;
+  sessionID = client->sessionID;
+  ski       = hdr->ski;
+  keyInfo   = hdr->keyInfo;
+
+  client->params->routerKeyCallback(clientID, sessionID, isAnn, ntohl(hdr->as),
+                                 ski, keyInfo, client->user);
+  return true;
+}
 /**
  * Verify that the cache session id is correct. In case the cache session id is
  * incorrect == changed the flag session id_changed will be set to true. The old
@@ -362,6 +385,9 @@ static void receivePDUs(RPKIRouterClient* client, bool returnAterEndOfData)
           keepGoing = false;
         }
         break;
+      case PDU_TYPE_ROUTER_KEY:
+        processPDURouterKey(client, (RPKIRouterKeyHeader*)byteBuffer);
+        break;
       case PDU_TYPE_CACHE_RESET :
         // Reset our cache
         client->params->resetCallback(client->routerClientID, client->user);
@@ -437,7 +463,7 @@ static void* manageConnection (void* clientPtr)
     {
       // Receive and process all PDUs - This is a loop until the connection
       // is either lost, closed, or the end of data is received (single request)
-      // Modified call with 0.4.1.0 to use variable as second parameter rather 
+      // Modified call with 0.4.1.0 to use variable as second parameter rather
       // than false
       receivePDUs(client, client->stopAfterEndOfData);
       if (client->stopAfterEndOfData)

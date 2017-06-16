@@ -4,20 +4,20 @@
  * their official duties. Pursuant to title 17 Section 105 of the United
  * States Code this software is not subject to copyright protection and
  * is in the public domain.
- * 
+ *
  * NIST assumes no responsibility whatsoever for its use by other parties,
  * and makes no guarantees, expressed or implied, about its quality,
  * reliability, or any other characteristic.
- * 
+ *
  * We would appreciate acknowledgment if the software is used.
- * 
+ *
  * NIST ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS" CONDITION AND
  * DISCLAIM ANY LIABILITY OF ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING
  * FROM THE USE OF THIS SOFTWARE.
- * 
- * 
+ *
+ *
  * This software might use libraries that are under GNU public license or
- * other licenses. Please refer to the licenses of all libraries required 
+ * other licenses. Please refer to the licenses of all libraries required
  * by this software.
  *
  * This handler processes ROA validation
@@ -27,7 +27,7 @@
  * Changelog:
  * -----------------------------------------------------------------------------
  *   0.3.0 - 2013/01/28 - oborchert
- *           * Update to be compliant to draft-ietf-sidr-rpki-rtr.26. This 
+ *           * Update to be compliant to draft-ietf-sidr-rpki-rtr.26. This
  *             update does not include the secure protocol section. The protocol
  *             will still use un-encrypted plain TCP
  *   0.2.0 - 2011/01/07 - oborchert
@@ -66,6 +66,9 @@ static void handlePrefix (uint32_t valCacheID, uint16_t session_id,
 static void handleReset (uint32_t valCacheID, void* rpkiHandler);
 static bool handleError (uint16_t errNo, const char* msg, void* rpkiHandler);
 static int handleConnection (void* user);
+static void handleRouterKey (uint32_t valCacheID, uint16_t session_id,
+                          bool isAnn, uint32_t oas, const char* ski,
+                          const char* keyInfo, void* rpkiHandler);
 
 
 
@@ -89,6 +92,7 @@ bool createRPKIHandler (RPKIHandler* handler, PrefixCache* prefixCache,
   handler->rrclParams.prefixCallback     = handlePrefix;
   handler->rrclParams.resetCallback      = handleReset;
   handler->rrclParams.errorCallback      = handleError;
+  handler->rrclParams.routerKeyCallback  = handleRouterKey;
   handler->rrclParams.connectionCallback = handleConnection;
 
   handler->rrclParams.serverHost         = serverHost;
@@ -139,17 +143,17 @@ static void handlePrefix (uint32_t valCacheID, uint16_t session_id,
                           uint32_t oas, void* rpkiHandler)
 {
   char prefixBuf[MAX_PREFIX_STR_LEN_V6];
-  
+
   LOG(LEVEL_DEBUG, HDR "ROA-wl: %s [originAS: %u, prefix: %s, max-len: %u, "
                    "valCacheID: 0x%08X, session_id: 0x%04X)", pthread_self(),
-      (isAnn ? "Ann" : "Wd"), oas, 
-      ipPrefixToStr(prefix, prefixBuf, MAX_PREFIX_STR_LEN_V6), maxLen, 
+      (isAnn ? "Ann" : "Wd"), oas,
+      ipPrefixToStr(prefix, prefixBuf, MAX_PREFIX_STR_LEN_V6), maxLen,
       valCacheID, session_id);
 
   // This method takes care of the received white list prefix/origin entry.
   RPKIHandler* hanlder = (RPKIHandler*)rpkiHandler;
   if (isAnn)
-  {    
+  {
     addROAwl(hanlder->prefixCache, oas, prefix, maxLen, session_id, valCacheID);
   }
   else
@@ -201,4 +205,14 @@ static int handleConnection (void* user)
                   "- reconnecting after %dsec", RECONNECT_DELAY);
   return RECONNECT_DELAY;
 }
+
+
+static void handleRouterKey (uint32_t valCacheID, uint16_t session_id,
+                          bool isAnn, uint32_t oas, const char* ski,
+                          const char* keyInfo, void* rpkiHandler)
+{
+
+  // TODO: call API's registerPublicKey method
+}
+
 

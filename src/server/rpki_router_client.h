@@ -4,42 +4,42 @@
  * their official duties. Pursuant to title 17 Section 105 of the United
  * States Code this software is not subject to copyright protection and
  * is in the public domain.
- * 
+ *
  * NIST assumes no responsibility whatsoever for its use by other parties,
  * and makes no guarantees, expressed or implied, about its quality,
  * reliability, or any other characteristic.
- * 
+ *
  * We would appreciate acknowledgment if the software is used.
- * 
+ *
  * NIST ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS" CONDITION AND
  * DISCLAIM ANY LIABILITY OF ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING
  * FROM THE USE OF THIS SOFTWARE.
- * 
- * 
+ *
+ *
  * This software might use libraries that are under GNU public license or
- * other licenses. Please refer to the licenses of all libraries required 
+ * other licenses. Please refer to the licenses of all libraries required
  * by this software.
  *
  *
  * RPKI/Router protocol client-side implementation.
  *
  * Uses log.h for error reporting
- * 
+ *
  * @version 0.4.1.0
  *
  * Changelog:
  * -----------------------------------------------------------------------------
  * 0.4.1.0  - 2016/08/30 - oborchert
- *            * Added parameter 'stopAfterEndOfData' to structure 
+ *            * Added parameter 'stopAfterEndOfData' to structure
  *              RPKIRouterClient.
  * 0.3.0.10 - 2015/11/09 - oborchert
  *            * Removed types.h
  * 0.3.0.7  - 2015/04/17 - oborchert
- *            * BZ599 - Changed typecase from (int) to (uintptr_t) to prevent 
+ *            * BZ599 - Changed typecase from (int) to (uintptr_t) to prevent
  *              compiler warnings and other nasty side affects while compiling
  *              on 32 and 64 bit OS.
  * 0.3.0.0  - 2013/01/28 - oborchert
- *            * Update to be compliant to draft-ietf-sidr-rpki-rtr.26. This 
+ *            * Update to be compliant to draft-ietf-sidr-rpki-rtr.26. This
  *              update does not include the secure protocol section. The protocol
  *              will still use un-encrypted plain TCP
  *          - 2012/12/17 - oborchert
@@ -74,12 +74,12 @@ typedef struct {
   /**
    * This function is called for each prefix announcement / withdrawl received
    * from the RPKI validation cache.
-   * 
-   * @param valCacheID  This Id represents the cache. It is used to be able to 
-   *                    later on identify the white-list / ROA entry in case the 
+   *
+   * @param valCacheID  This Id represents the cache. It is used to be able to
+   *                    later on identify the white-list / ROA entry in case the
    *                    cache state changes.
    * @param sessionID   The cache sessionID entry for this data. It is be useful
-   *                    for sessionID changes in case SRx is implementing a 
+   *                    for sessionID changes in case SRx is implementing a
    *                    performance driven approach.
    * @param isAnn       Indicates if this in an announcement or not.
    * @param prefix      The prefix itself. Contains the information of v4/v6
@@ -91,11 +91,14 @@ typedef struct {
                          bool isAnn, IPPrefix* prefix, uint16_t maxLen,
                          uint32_t oas, void* user);
 
+  void (*routerKeyCallback)(uint32_t valCacheID, uint16_t sessionID,
+                            bool isAnn, uint32_t oas, const char* ski,
+                            const char* keyInfo, void* user);
 
   /**
-   * The cache/server sent a reset response. Usually, the client should reset 
+   * The cache/server sent a reset response. Usually, the client should reset
    * his own cache.
-   * 
+   *
    * @note There is no need to send a reset query - this was done already
    * The cache though can reestablish the connection similar to a cache session
    * id change.
@@ -133,11 +136,11 @@ typedef struct {
    * @param valCacheID The id of the cache whose sessionID changed.
    * @param newSessionID The new cache sessionID.
    */
-  void (*sessionIDEstablishedCallback)(uint32_t valCacheID, 
+  void (*sessionIDEstablishedCallback)(uint32_t valCacheID,
                                        uint16_t newSessionID);
 
   /**
-   * An error report was received. 
+   * An error report was received.
    *
    * @note Optional - can be \c NULL
    *
@@ -145,7 +148,7 @@ typedef struct {
    * @param msg Error message
    * @param user User data
    * @return \c true = keep the connection, \c false = close connection
-   */ 
+   */
   bool (*errorCallback)(uint16_t errNo, const char* msg, void* user);
 
   /**
@@ -195,16 +198,16 @@ typedef struct {
   /** The type of the last received PDU. */
   RPKIRouterPDUType        lastRecv;
 
-  // The following attributes are needed for cache sessionID and possible 
+  // The following attributes are needed for cache sessionID and possible
   // changes within the sessionID number.
   /** The session_id given by the validation cache (in network order!). */
   uint32_t                 sessionID; // < Stored in network order
   /** Indicates change in sessionID number. Once set the cache has to remove
-   * all entries coming from this cache where the sessionID numbers are 
+   * all entries coming from this cache where the sessionID numbers are
    * different.*/
   bool                     sessionIDChanged;
   /** Is needed to prevent twice reset at the beginning. If startup is true
-   * the cache session_id values will be "ignored" but set to the received 
+   * the cache session_id values will be "ignored" but set to the received
    * value. See receivePDU for more info. */
   bool                     startup;
   /** Is used to allow the receiver thread of ending after the END OF DATA is
@@ -216,9 +219,9 @@ typedef struct {
 
 /**
  * Create a unique router client ID
- * 
+ *
  * @param self the router clinet the ID has to be generated for.
- * 
+ *
  * @return the ID;
  */
 extern uint32_t createRouterClientID(RPKIRouterClient* self);
