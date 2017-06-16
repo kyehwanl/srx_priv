@@ -4,20 +4,20 @@
  * their official duties. Pursuant to title 17 Section 105 of the United
  * States Code this software is not subject to copyright protection and
  * is in the public domain.
- * 
+ *
  * NIST assumes no responsibility whatsoever for its use by other parties,
  * and makes no guarantees, expressed or implied, about its quality,
  * reliability, or any other characteristic.
- * 
+ *
  * We would appreciate acknowledgment if the software is used.
- * 
+ *
  * NIST ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS" CONDITION AND
  * DISCLAIM ANY LIABILITY OF ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING
  * FROM THE USE OF THIS SOFTWARE.
- * 
- * 
+ *
+ *
  * This software might use libraries that are under GNU public license or
- * other licenses. Please refer to the licenses of all libraries required 
+ * other licenses. Please refer to the licenses of all libraries required
  * by this software.
  *
  * An RPKI/Router Protocol server test harness. This Software simulates an
@@ -51,16 +51,16 @@
  *              are executed.
  *            * Allows the exit/quit/\q command to be executed from within a
  *              script
- *            * Allowed to end the program when a script is passed and the 
+ *            * Allowed to end the program when a script is passed and the
  *              last command is quit BZ# 351
  *            * Changed all command processing methods to return the proper
  *              command id CMD_ID_<command>
  * 0.3.0    - 2013/01/28 - oborchert
- *            * Update to be compliant to draft-ietf-sidr-rpki-rtr.26. This 
- *              update does not include the secure protocol section. The 
+ *            * Update to be compliant to draft-ietf-sidr-rpki-rtr.26. This
+ *              update does not include the secure protocol section. The
  *              protocol will still use un-encrypted plain TCP
  * 0.2.2    - 2012/12/28 - oborchert
- *            * Modified update 0.2.1. Fix BZ165 caused no ROA to be 
+ *            * Modified update 0.2.1. Fix BZ165 caused no ROA to be
  *              installed into the cache. Applied new fix.
  * 0.2.1    - 2012/07/25 - kyehwan
  *            * Fixed segmentation fault while adding ROAs.
@@ -141,13 +141,13 @@ typedef struct {
   /** Hash handle */
   UT_hash_handle  hh;
   /** The version used with this client */
-  int             version; 
+  int             version;
 } CacheClient;
 
 /**
  * This configuration structure allows to pass some more configuration settings
  * to the server.
- * 
+ *
  * @since 0.4.1.0
  */
 typedef struct {
@@ -177,7 +177,7 @@ typedef struct {
 #define CMD_ID_RUN       17
 #define CMD_ID_SLEEP     18
 
-#define DEF_RPKI_PORT    323
+#define DEF_RPKI_PORT    /*323*/ 50001
 #define UNDEF_VERSION    -1
 /*----------
  * Constants
@@ -523,7 +523,7 @@ void sendPrefixes(int* fdPtr, uint32_t clientSerial, uint16_t clientSessionID,
 
 /**
  * Send a SERIAL NOTIFY to all clients of the test harness
- * 
+ *
  * @return CMD_ID_NOTIFY
  */
 int sendSerialNotifyToAllClients()
@@ -547,13 +547,13 @@ int sendSerialNotifyToAllClients()
 
     unlockReadLock(&cache.lock);
   }
-  
+
   return CMD_ID_NOTIFY;
 }
 
 /**
  * Sends a Cache Reset message to all clients.
- * 
+ *
  * @return CMD_ID_RESET;
  */
 int sendCacheResetToAllClients()
@@ -574,7 +574,7 @@ int sendCacheResetToAllClients()
 
     unlockReadLock(&cache.lock);
   }
-  
+
   return CMD_ID_RESET;
 }
 
@@ -588,7 +588,7 @@ int sendCacheResetToAllClients()
  * @return true if it could be send.
  */
 bool sendErrorPDU(int* fdPtr, RPKICommonHeader* pdu, char* reason)
-{  
+{
   printf("ERROR: invalid PDU because of %s\n", reason);
 //  uint8_t                  pdu[sizeof(RPKIErrorReportHeader)];
 //  RPKICacheResponseHeader* hdr;
@@ -851,7 +851,7 @@ void handleClient(ServerSocket* svrSock, int sock, void* user)
   uint32_t         remainingDataLentgh;
   void*            buf;
   CacheClient*     ccl = NULL;
-  
+
   HASH_FIND_INT(clients, &sock, ccl);
   if (ccl == NULL)
   {
@@ -884,7 +884,7 @@ void handleClient(ServerSocket* svrSock, int sock, void* user)
       sendErrorPDU(&ccl->fd, &hdr, "Illegal switch of version number!");
       continue;
     }
-    
+
     // determine the remaining data that needs to be received - if any
     remainingDataLentgh = ntohl(hdr.length) - sizeof(RPKICommonHeader);
 
@@ -947,7 +947,7 @@ void handleClient(ServerSocket* svrSock, int sock, void* user)
         break;
 
       case PDU_TYPE_RESERVED:
-        
+
       default:
         ERRORF("Error: Invalid PDU type: %hhu\n", hdr.type);
     }
@@ -961,13 +961,13 @@ void handleClient(ServerSocket* svrSock, int sock, void* user)
 
 /**
  * Handles client session status
- * 
+ *
  * @param svrSock The server socket that receives the data
  * @param client NOT USED
  * @param fd The file descriptor
  * @param connected Indicates if the connection will be established of shut down
  * @param user NOT USED
- * 
+ *
  * @return false is an error occured.
  */
 bool handleStatus(ServerSocket* svrSock, ServerClient* client, int fd,
@@ -1008,13 +1008,13 @@ bool handleStatus(ServerSocket* svrSock, ServerClient* client, int fd,
 
 void* handleServerRunLoop(void* _unused)
 {
-  LOG (LEVEL_DEBUG, "([0x%08X]) > RPKI Server Thread started!", pthread_self());      
-  
+  LOG (LEVEL_DEBUG, "([0x%08X]) > RPKI Server Thread started!", pthread_self());
+
   runServerLoop (&svrSocket, MODE_CUSTOM_CALLBACK,
                  handleClient, handleStatus, NULL);
-  
-  LOG (LEVEL_DEBUG, "([0x%08X]) < RPKI Server Thread stopped!", pthread_self());      
-  
+
+  LOG (LEVEL_DEBUG, "([0x%08X]) < RPKI Server Thread stopped!", pthread_self());
+
   pthread_exit(0);
 }
 
@@ -1136,7 +1136,7 @@ bool readPrefixData(const char* arg, SList* dest, uint32_t serial, bool isFile)
     {
       fields[idx] = strsep(&bptr, " \t");
       fieldIsNull = fields[idx] == NULL;
-      
+
       if (fieldIsNull)
       {
         if (idx < NUM_FIELDS)
@@ -1152,17 +1152,17 @@ bool readPrefixData(const char* arg, SList* dest, uint32_t serial, bool isFile)
           }
           return false;
         }
-      } 
+      }
       else if (fields[idx][0] == 0)
       {
         // To the else if block above:
         // It can happen that the buffer contains "      a.b.c.d/d   x   y   "
         // in this case the read field "fields[idx][0]" is zero for each list of
-        // blanks. In this case read the next element in the buffer and don't 
+        // blanks. In this case read the next element in the buffer and don't
         // increase the idx, the field has to be refilled.
         continue;
       }
-      
+
       idx++;
     } while (idx < NUM_FIELDS && !fieldIsNull);
 
@@ -1219,7 +1219,7 @@ bool readPrefixData(const char* arg, SList* dest, uint32_t serial, bool isFile)
  *
  * @param argument if NULL display the current cache session id otherwise use
  *                 value to generate new once.
- * 
+ *
  * @return CMD_ID_SESSID
  */
 int processSessionID(char* argument)
@@ -1253,7 +1253,7 @@ int processSessionID(char* argument)
       }
       else
       {
-        // initiate a serial request from the clients. This will result in a 
+        // initiate a serial request from the clients. This will result in a
         // session id error.
         sessionID = newSessionID;
         processSessionID(NULL);
@@ -1261,7 +1261,7 @@ int processSessionID(char* argument)
       }
     }
   }
-  
+
   return CMD_ID_SESSID;
 }
 
@@ -1271,20 +1271,20 @@ int processSessionID(char* argument)
 
 /**
  * Display the version information.
- * 
+ *
  * @return CMD_ID_VERSION
  */
 int showVersion()
 {
   printf("%s Version %s\n", RPKI_RTR_SRV_NAME, RPKI_RTR_SRV_VER);
-  
+
   return CMD_ID_VERSION;
 }
 
 
 /**
  * Display the command help
- * 
+ *
  * @return CMD_ID_HELP
  */
 int showHelp(char* command)
@@ -1404,21 +1404,21 @@ int showHelp(char* command)
 }
 
 /**
- * Display the credits of the program 
- * 
+ * Display the credits of the program
+ *
  * @return CMD_ID_CREDITS
  */
 int showCredits()
 {
   showVersion();
   printf(SRX_CREDITS);
-  
+
   return CMD_ID_CREDITS;
 }
 
 /**
  * Turn Verbose mode on or off.
- * 
+ *
  * @return CMD_ID_VERBOSE
  */
 int toggleVerboseMode()
@@ -1504,24 +1504,24 @@ int appendPrefixNow(char* line)
 
 /**
  * Append the given prefix information in the given file.
- * 
+ *
  * @param fileName the filename containing the prefix information
- * 
+ *
  * @return CMD_ID_APPEND
  */
 int appendPrefixFile(char* fileName)
 {
   if (!appendPrefixData(fileName, true))
   {
-    printf("Error appending prefix information of '%s'\n", fileName);    
+    printf("Error appending prefix information of '%s'\n", fileName);
   }
-  
+
   return CMD_ID_ADD;
 }
 
 /**
  * Clear the cache without sending a notify.
- * 
+ *
  * @return CMD_ID_EMPTY
  */
 int emptyCache()
@@ -1531,13 +1531,13 @@ int emptyCache()
   unlockWriteLock(&cache.lock);
 
   OUTPUTF(true, "Emptied the cache\n");
-  
+
   return CMD_ID_EMPTY;
 }
 
 /**
  * Print the content of the cache test harness to the console.
- * 
+ *
  * @return CMD_ID_CACHE
  */
 int printCache()
@@ -1591,7 +1591,7 @@ int printCache()
     }
   }
   unlockReadLock(&cache.lock);
-  
+
   return CMD_ID_CACHE;
 }
 
@@ -1689,15 +1689,15 @@ bool processEntryRemoval(char* arg)
   return true;
 }
 
-/** 
+/**
  * This method is a wrapper for processEntryRemoval(char* arg) which does
- * the actual work. This wrapper is necessary to return the correct integer 
+ * the actual work. This wrapper is necessary to return the correct integer
  * value.
- * 
+ *
  * @param arg list of entry-id's to be deleted from the cache.
  *
  * @return CMD_ID_REMOVE
- * 
+ *
  * @since 0.3.0.2
  */
 int removeEntries(char* arg)
@@ -1727,9 +1727,9 @@ int removeEntriesNow(char* arg)
 
 /**
  * Prepare the generation of the error report.
- * 
+ *
  * @param arg <errorNo> <pdu | "-"> <msg | "-">
- * 
+ *
  * @return CMD_ID_ERROR
  */
 int issueErrorReport(char* arg)
@@ -1772,7 +1772,7 @@ int issueErrorReport(char* arg)
 
 /**
  * Print the list of clients to the console.
- * 
+ *
  * @return CMD_ID_CLIENTS
  */
 int listClients()
@@ -1793,7 +1793,7 @@ int listClients()
       printf("%u: %s\n", cl->fd, socketToStr(cl->fd, true, buf, BUF_SIZE));
     }
   }
-  
+
   return CMD_ID_CLIENTS;
 }
 
@@ -1802,9 +1802,9 @@ int handleLine(char* line);
 
 /**
  * Load the file given and execute line by line.
- * 
+ *
  * @param arg The name of the file
- * 
+ *
  * @return The last comment in the script or CMD_ID_RUN if unknown
  */
 int executeScript(char* fileName)
@@ -1845,15 +1845,15 @@ int executeScript(char* fileName)
   }
 
   fclose(fh);
-  
+
   return (last_command == CMD_ID_UNKNOWN) ? CMD_ID_RUN : last_command;
 }
 
 /**
  * Pauses the application for a given number of seconds
- * 
+ *
  * @param noSeconds The time in seconds the program has to pause.
- * 
+ *
  * @return CMD_ID_SLEEP.
  */
 int pauseExecution(char* noSeconds)
@@ -1874,9 +1874,9 @@ int pauseExecution(char* noSeconds)
 
 /**
  * Doesn't really do anything
- * 
+ *
  * @return CMD_ID_QUIT
- * 
+ *
  * @since 0.3.0.2
  */
 int processQuit()
@@ -1891,7 +1891,7 @@ int processQuit()
 /**
  * This method parses the line by splitting it into command and argument
  * separated by a blank. Depending on the command the appropriate method is
- * called. With version 0.3.0.2 this method will return true if the parser can 
+ * called. With version 0.3.0.2 this method will return true if the parser can
  * continue and false if not. (false does not necessarily mean an error.
  *
  * @param line The line to be parsed
@@ -1899,7 +1899,7 @@ int processQuit()
  * @return the integer value of the executed command.
  */
 int handleLine(char* line)
-{  
+{
   char* cmd, *arg;
   int retVal = CMD_ID_UNKNOWN;
 
@@ -1933,7 +1933,7 @@ int handleLine(char* line)
   CMD_CASE("clients",   listClients);
   CMD_CASE("run",       executeScript);
   CMD_CASE("sleep",     pauseExecution);
-  
+
   CMD_CASE("quit",      processQuit);
   CMD_CASE("exit",      processQuit);
   CMD_CASE("\\q",       processQuit);
@@ -1965,7 +1965,7 @@ void handleUserInput()
     }
 
     // Execute the line
-    
+
     cmd = handleLine(line);
     if (cmd == CMD_ID_QUIT)
     {
@@ -1973,11 +1973,11 @@ void handleUserInput()
       break;
     }
     else if (cmd != CMD_ID_UNKNOWN)
-    {      
+    {
       // Store so that the user does not have to type it again
-      add_history(line);    
+      add_history(line);
     }
-    free(line);        
+    free(line);
   }
 
   write_history(HISTORY_FILENAME);
@@ -2044,13 +2044,13 @@ void printLogMessage(LogLevel level, const char* fmt, va_list args)
 
 /**
  * This handler deals with SIGINT signals and relaces the old handler.
- * 
+ *
  * @param signal
  */
 void handleSigInt(int signal)
 {
   printf ("exit\n");
-  // Let 'readline' return 0, i.e. stop the user-input loop  
+  // Let 'readline' return 0, i.e. stop the user-input loop
   fclose(stdin);
 }
 
@@ -2090,9 +2090,9 @@ bool setupService()
 
 /**
  * Print the program syntax on stdio
- * 
+ *
  * @param prgName The program name.
- * 
+ *
  * @since 0.4.1.0
  */
 static void syntax(const char* prgName)
@@ -2104,24 +2104,24 @@ static void syntax(const char* prgName)
   printf ("  For backwards compatibility a script also can be added after a\n");
   printf ("  port is specified.! - For future usage, use -f <script> to \n");
   printf ("  specify a script!\n");
-  printf ("  If No port is specified the default port %u is used.\n", 
-          DEF_RPKI_PORT);  
+  printf ("  If No port is specified the default port %u is used.\n",
+          DEF_RPKI_PORT);
 }
 
 /**
- * Parses the program parameters and set the configuration. This function 
+ * Parses the program parameters and set the configuration. This function
  * returns true if the program can continue and the exit Value.
- * 
+ *
  * @param argc    The argument count
  * @param argv    The Argument array
  * @param cfg     The program configuration
  * @param exitVal The exit value pointer if needed
- * 
+ *
  * @return true if the program can continue, false if it should be ended.
- * 
+ *
  * @since 0.4.1.0
  */
-static bool parseParams(int argc, const char* argv[], 
+static bool parseParams(int argc, const char* argv[],
                         RPKI_SRV_Configuration* cfg, int* exitVal)
 {
   bool retVal = true;
@@ -2129,7 +2129,7 @@ static bool parseParams(int argc, const char* argv[],
   bool doHelp = false;
   char* arg   = NULL;
   int idx     = 0;
-  
+
   for (idx = 1; (idx < argc) && !doHelp; idx++)
   {
     arg = (char*)argv[idx];
@@ -2147,7 +2147,7 @@ static bool parseParams(int argc, const char* argv[],
           doHelp = true;
           break;
         case 'f':
-          idx++;          
+          idx++;
           if (idx < argc)
           {
             cfg->script = (char*)argv[idx++];
@@ -2159,13 +2159,13 @@ static bool parseParams(int argc, const char* argv[],
             retVal = false;
             eVal   = 1;
           }
-          break;          
+          break;
         default:
           printf ("ERROR: Invalid parameter '%s'\n", arg);
           doHelp = true;
           retVal = false;
           eVal   = 1;
-          break;          
+          break;
       }
     }
     else if (strcmp(arg, "help") == 0)
@@ -2177,7 +2177,7 @@ static bool parseParams(int argc, const char* argv[],
       cfg->port = strtol(argv[1], NULL, 10);
     }
   }
-  
+
   if (doHelp)
   {
     syntax(argv[0]);
@@ -2188,22 +2188,22 @@ static bool parseParams(int argc, const char* argv[],
   {
     cfg->port = DEF_RPKI_PORT;
   }
-  
+
   if (exitVal != NULL)
   {
     *exitVal = eVal;
-  }  
-    
+  }
+
   return retVal;
 }
 
 /**
  * Start the RPKI Test Harness.
- * 
+ *
  * @param argc The number of arguments passed to the program
  * @param argv The arguments passed to the program
- * 
- * @return The program exit level. 
+ *
+ * @return The program exit level.
  */
 int main(int argc, const char* argv[])
 {
@@ -2252,29 +2252,29 @@ int main(int argc, const char* argv[])
     new_sigaction.sa_handler = handleSigInt;
     sigemptyset(&new_sigaction.sa_mask);
     new_sigaction.sa_flags = 0;
-    
+
     sigaction (SIGINT, NULL, &old_sigaction);
     if (old_sigaction.sa_handler != SIG_IGN)
     {
       sigaction(SIGINT, &new_sigaction, NULL);
     }
     sigaction (SIGHUP, NULL, &old_sigaction);
-    
+
     if (old_sigaction.sa_handler != SIG_IGN)
     {
-      sigaction (SIGHUP, &new_sigaction, NULL);      
+      sigaction (SIGHUP, &new_sigaction, NULL);
     }
     sigaction (SIGTERM, NULL, &old_sigaction);
-    
+
     if (old_sigaction.sa_handler != SIG_IGN)
     {
       sigaction (SIGTERM, &new_sigaction, NULL);
     }
-    
+
     //signal(SIGINT, handleSigInt);
 
     ret = 0;
-    bool doContiunue = true; 
+    bool doContiunue = true;
     if (config.script != NULL)
     {
       doContiunue = executeScript(config.script) != CMD_ID_QUIT;
