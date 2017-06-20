@@ -163,7 +163,9 @@ if BUILD_TEST
 
   test_PROGRAMS= test_ski_cache
 
-  test_ski_cache_SOURCES = $(TEST_DIR)/test_ski_cache.c
+  test_ski_cache_SOURCES = $(TEST_DIR)/test_ski_cache.c \
+                           $(SERVER_DIR)/ski_cache.c
+  
 endif
 
 ################################################################################

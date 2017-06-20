@@ -131,8 +131,10 @@ am_srxsvr_client_OBJECTS = srxsvr_client.$(OBJEXT)
 srxsvr_client_OBJECTS = $(am_srxsvr_client_OBJECTS)
 srxsvr_client_DEPENDENCIES = libsrx_util.la libsrx_shared.la \
 	libSRxProxy.la
-am__test_ski_cache_SOURCES_DIST = $(TEST_DIR)/test_ski_cache.c
-@BUILD_TEST_TRUE@am_test_ski_cache_OBJECTS = test_ski_cache.$(OBJEXT)
+am__test_ski_cache_SOURCES_DIST = $(TEST_DIR)/test_ski_cache.c \
+	$(SERVER_DIR)/ski_cache.c
+@BUILD_TEST_TRUE@am_test_ski_cache_OBJECTS = test_ski_cache.$(OBJEXT) \
+@BUILD_TEST_TRUE@	ski_cache.$(OBJEXT)
 test_ski_cache_OBJECTS = $(am_test_ski_cache_OBJECTS)
 test_ski_cache_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I.@am__isrc@
@@ -444,7 +446,9 @@ srxsvr_client_LDADD = libsrx_util.la libsrx_shared.la libSRxProxy.la
 ################################################################################
 ################################################################################
 @BUILD_TEST_TRUE@testdir = $(bindir)
-@BUILD_TEST_TRUE@test_ski_cache_SOURCES = $(TEST_DIR)/test_ski_cache.c
+@BUILD_TEST_TRUE@test_ski_cache_SOURCES = $(TEST_DIR)/test_ski_cache.c \
+@BUILD_TEST_TRUE@                           $(SERVER_DIR)/ski_cache.c
+
 
 ################################################################################
 ################################################################################
