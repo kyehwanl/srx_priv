@@ -261,7 +261,7 @@ static void receivePDUs(RPKIRouterClient* client, bool returnAterEndOfData)
   // memory will be extended to the space needed. In case the space can not be
   // extended, the PDU will be loaded as much as possible and the rest will be
   // skipped.
-  uint32_t         bytesAllocated = sizeof(RPKIIPv6PrefixHeader);
+  uint32_t         bytesAllocated = sizeof(RPKIRouterKeyHeader);
   // Keep going is used to keep the received thread up and running. It will be
   // set false once the connection is shut down.
   bool             keepGoing = true;

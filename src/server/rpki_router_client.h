@@ -96,7 +96,7 @@ typedef struct {
                          uint32_t oas, void* user);
 
   void (*routerKeyCallback)(uint32_t valCacheID, uint16_t sessionID,
-                            bool isAnn, uint32_t oas, const char* ski,
+                            bool isAnn, uint32_t asn, const char* ski,
                             const char* keyInfo, void* user);
 
   /**

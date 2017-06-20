@@ -69,7 +69,7 @@ static void handleReset (uint32_t valCacheID, void* rpkiHandler);
 static bool handleError (uint16_t errNo, const char* msg, void* rpkiHandler);
 static int handleConnection (void* user);
 static void handleRouterKey (uint32_t valCacheID, uint16_t session_id,
-                          bool isAnn, uint32_t oas, const char* ski,
+                          bool isAnn, uint32_t asn, const char* ski,
                           const char* keyInfo, void* rpkiHandler);
 
 
@@ -210,11 +210,29 @@ static int handleConnection (void* user)
 
 
 static void handleRouterKey (uint32_t valCacheID, uint16_t session_id,
-                          bool isAnn, uint32_t oas, const char* ski,
+                          bool isAnn, uint32_t asn, const char* ski,
                           const char* keyInfo, void* rpkiHandler)
 {
 
-  // TODO: call API's registerPublicKey method
+  SRxCryptoAPI* srxCAPI  = getSrxCAPI();
+  sca_status_t status = API_STATUS_OK;
+  u_int8_t res;
+  BGPSecKey bsKey;
+
+  bsKey.algoID = 1;
+  bsKey.asn = htonl(asn);
+  memcpy(bsKey.ski, ski, 20);
+  bsKey.keyLength = 91;
+  bsKey.keyData = (u_int8_t*)calloc(1,91);
+  memcpy(bsKey.keyData, keyInfo, 91);
+
+  res = srxCAPI->registerPublicKey(&bsKey, &status);
+
+  if (res == API_SUCCESS)
+    LOG(LEVEL_INFO, "RPKI/Router Key Stored in srxcryptoapi ");
+  else
+    LOG(LEVEL_INFO, "Failed to store RPKI/Router Key in srxcryptoapi ");
+
 }
 
 
