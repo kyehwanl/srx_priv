@@ -24,10 +24,18 @@
  *
  * Changelog:
  * -----------------------------------------------------------------------------
- * 0.1.0.0  - 2017/06/14 - oborchert
+ * 0.1.0.0 - 2017/06/19 - oborchert
+ *            * modified function header for registering key ski's 
+ *         - 2017/06/14 - oborchert
  *            * File created
  */
+#include <stdlib.h>
+#include <string.h>
+#include <srx/srxcryptoapi.h>
 #include "server/ski_cache.h"
+
+/** The SKI center value. */
+#define _SKI_CENTER_VAL 128
 
 /**
  * This software was developed at the National Institute of Standards and
@@ -58,11 +66,29 @@
  * 0.1.0.0  - 2017/06/14 - oborchert
  *            * File created
  */
-#ifndef SKI_CACHE_H
-#define SKI_CACHE_H
+typedef struct _ski_node {
+  /** The byte value of this particular node */
+  u_int8_t   value;
+  /** The level within the SKI 1..20 */
+  u_int8_t   level;
+  /** The parent node */
+  struct _ski_node* parent;
+  /** The node to the left */
+  struct _ski_node* left;
+  /** The node to the right */
+  struct _ski_node* right;
+  /** The child - its the SKI-LEAF of SKI_NODE if level < SKI_LENGTH */
+  void*      child;
+} _SKI_NODE;
+
+typedef struct _ski_leaf {
+  struct _ski_leaf* next;
+  u_int32_t asn;
+  u_int16_t counter;
+} _SKI_LEAF;
 
 /** The internal SKI cache. */
-static typedef struct {
+typedef struct {
   /**
    * The parameter specifies a callback function with the following functionality:
    * Callback function to signal SKI changes. This function gets called by the
@@ -74,8 +100,96 @@ static typedef struct {
    * @param skiStatus one or more SKI's (keys) of the update changed.
    * @param updateID The update that is related to the SKI
    */
-  void (*keyChange)(e_SKI_status skiStatus, SRxUpdateID* updateID);  
+  void (*keyChange)(e_SKI_status skiStatus, SRxUpdateID* updateID);
+  
+  /** The SKI root node. It the element with the value 128 */
+  _SKI_NODE* rootNode;  
+  /** The number of SKI_NODES stored. */
+  int nodes;
+  /** The number of SKI_LEAVS stored. */
+  int leavs;
 } _SKI_CACHE;
+
+/**
+ * Return the last SKI Node that will contain the SKI LEAF. This function 
+ * generates the SKI tree up to the last node.
+ * 
+ * @param cache The SKI cache
+ * @param complete_ski The complete SKI number
+ * @param pos the position in the SKI number
+ * @param algoID The algorithmID
+ * 
+ * @return the SKI Node or null
+ */
+static _SKI_NODE* getSKI_NODE(_SKI_NODE* node, char* complete_ski, 
+                                 u_int8_t pos, u_int8_t algoID)
+{
+  _SKI_NODE* retNode = node;
+  
+  if (node != NULL) 
+  {
+    if (pos < SKI_LENGTH)
+    {    
+      u_int8_t num = (u_int8_t)complete_ski[pos];
+      // Now find the retNode that matches the num value
+      while ((retNode != NULL) && (num < retNode->value))
+      {
+        retNode = retNode->left;
+      }
+      while ((retNode != NULL) && (num > retNode->value))
+      {
+        retNode = retNode->right;        
+      }
+      if (retNode != NULL)
+      {
+        if ((retNode->level+1) < SKI_LENGTH)
+        {
+          retNode = getSKI_NODE(retNode->child, complete_ski, pos++, algoID);
+        }
+      }
+    }
+  
+    // Generate the tree down to the node
+    if (retNode == NULL)
+    {
+      //node->child
+    }
+  }
+  
+  return retNode;
+}
+
+/**
+ * Create an empty SKI node.
+ * 
+ * @param cache The cache this node is part of
+ * @param parent The parent node or NULL if this is of level 1
+ * 
+ * @return the ski node.
+ */
+static _SKI_NODE* _createSKI_NODE(_SKI_CACHE* cache, void* parent)
+{
+  _SKI_NODE* node = malloc(sizeof(_SKI_NODE));
+  _SKI_NODE* parentNode = (_SKI_NODE*)parent;
+  memset (node, sizeof(_SKI_NODE), 0);
+  node->level = (parentNode == NULL ? 0 : (parentNode->level + 1));
+  node->value = _SKI_CENTER_VAL;  
+  cache->nodes++;
+}
+
+/**
+ * Create an empty SKI node.
+ * 
+ * @param level The level of the SKI node
+ * 
+ * @return the ski node.
+ */
+static _SKI_NODE* _freeSKI_NODE(_SKI_CACHE* cache, _SKI_NODE* node)
+{  
+  
+  
+  cache->nodes--;
+}
 
 /**
  * Create and initialize as SKI cache.
@@ -94,7 +208,7 @@ static typedef struct {
  * 
  * @return Pointer to the SKI cache or NULL.
  */
-SKI_CACHE* createSKICache(void (*callback)(e_SKI_status, SRxUpdateID*));
+SKI_CACHE* createSKICache(void (*callback)(e_SKI_status, SRxUpdateID*))
 {
   _SKI_CACHE* ski_cache = NULL;
   
@@ -103,9 +217,10 @@ SKI_CACHE* createSKICache(void (*callback)(e_SKI_status, SRxUpdateID*));
     ski_cache = malloc(sizeof(_SKI_CACHE));
     memset (ski_cache, sizeof(_SKI_CACHE), 0);
     ski_cache->keyChange = callback;
+    ski_cache->rootNode = _createSKI_NODE(ski_cache, NULL);
   }
   
-  return ski_cache;
+  return (SKI_CACHE*)ski_cache;
 }
 
 /**
@@ -113,11 +228,12 @@ SKI_CACHE* createSKICache(void (*callback)(e_SKI_status, SRxUpdateID*));
  *
  * @param cache The SKI cache that needs to be removed.
  */
-void releaseUpdateCache(SKI_CACHE* cache)
+void releaseSKICache(SKI_CACHE* cache)
 {
   if (cache != NULL)
   {    
-    free (cache);
+    _SKI_CACHE* _cache = (_SKI_CACHE*)cache;
+    free (_cache);
   }
 }
 
@@ -140,10 +256,10 @@ void releaseUpdateCache(SKI_CACHE* cache)
  * @return SKIVAL_ERROR if not bgpsec update, SKIVAL_INVALID if at least one key 
  * is missing in all signature blocks, SKIVAL_UNKNOWN if all keys are available.
  */
-UPD_REGRES registerUpdateSKI(SKI_CACHE* cache, SRxUpdateID* updateID, 
+e_Upd_RegRes registerUpdateSKI(SKI_CACHE* cache, SRxUpdateID* updateID, 
                              SCA_BGPSEC_SecurePath* bgpsec)
 {
-  return (bgpsec == NULL) ? REG_VAL_ERROR : REGVAL_UNKNOWN;
+  return (bgpsec == NULL) ? REGVAL_ERROR : REGVAL_UNKNOWN;
 }
 
 /**
@@ -160,11 +276,18 @@ void unregisterUpdateSKI(SKI_CACHE* cache, SRxUpdateID* updateID)
  * notifications for possible kick-starting of update validation.
  * 
  * @param cache The SKI cache.
- * @param ski The 20 byte SKI of the key
- * @param algoID The algorithm ID of the key
+ * @param ski The 20 byte SKI of the key.
+ * @param algoID The algorithm ID of the key.
+ * @param asn The ASN the key is assigned to.
  */
-void registerKeySKI(SKI_CACHE* cache, u_int8_t* ski, u_int8_t algoID)
-{}
+void registerKeySKI(SKI_CACHE* cache, u_int8_t* ski, u_int8_t algoID, 
+                    u_int32_t asn)
+{
+  _SKI_CACHE* ski_cache;
+  _SKI_LEAF*  ski_leave;
+  
+  
+}
 
 /** 
  * Remove the key counter from the <SKI, algo-id> tuple. This might trigger 
@@ -173,8 +296,10 @@ void registerKeySKI(SKI_CACHE* cache, u_int8_t* ski, u_int8_t algoID)
  * @param cache The SKI cache.
  * @param ski The 20 byte SKI of the key
  * @param algoID The algorithm ID of the key
+ * @param asn The ASN the key is assigned to.
  */
-void unregisterKeySKI(SKI_CACHE* cache, u_int8_t* ski, u_int8_t algoID)
+void unregisterKeySKI(SKI_CACHE* cache, u_int8_t* ski, u_int8_t algoID,
+                      u_int32_t asn)
 {}
 
 /**
@@ -184,4 +309,3 @@ void unregisterKeySKI(SKI_CACHE* cache, u_int8_t* ski, u_int8_t algoID)
  */
 void clean(SKI_CACHE* cache)
 {}
-#endif /* SKI_CACHE_H */

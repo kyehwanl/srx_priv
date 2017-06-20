@@ -39,6 +39,7 @@ host_triplet = @host@
 srx_PROGRAMS = srx_server$(EXEEXT)
 tools_PROGRAMS = rpkirtr_client$(EXEEXT) rpkirtr_svr$(EXEEXT) \
 	srxsvr_client$(EXEEXT)
+@BUILD_TEST_TRUE@test_PROGRAMS = test_ski_cache$(EXEEXT)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) \
 	$(dist_libSRxProxy_libconfig_DATA) $(dist_srx_config_DATA) \
@@ -84,7 +85,7 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(srxdir)" \
-	"$(DESTDIR)$(toolsdir)" \
+	"$(DESTDIR)$(testdir)" "$(DESTDIR)$(toolsdir)" \
 	"$(DESTDIR)$(libSRxProxy_libconfigdir)" \
 	"$(DESTDIR)$(srx_configdir)" "$(DESTDIR)$(srx_initddir)"
 LTLIBRARIES = $(noinst_LTLIBRARIES) $(pkglib_LTLIBRARIES)
@@ -104,7 +105,7 @@ am_libsrx_util_la_OBJECTS = client_socket.lo debug.lo directory.lo \
 	plugin.lo prefix.lo rwlock.lo server_socket.lo slist.lo \
 	socket.lo str.lo timer.lo xml_out.lo
 libsrx_util_la_OBJECTS = $(am_libsrx_util_la_OBJECTS)
-PROGRAMS = $(srx_PROGRAMS) $(tools_PROGRAMS)
+PROGRAMS = $(srx_PROGRAMS) $(test_PROGRAMS) $(tools_PROGRAMS)
 am_rpkirtr_client_OBJECTS = rpkirtr_client.$(OBJEXT) \
 	rpki_router_client.$(OBJEXT)
 rpkirtr_client_OBJECTS = $(am_rpkirtr_client_OBJECTS)
@@ -130,6 +131,10 @@ am_srxsvr_client_OBJECTS = srxsvr_client.$(OBJEXT)
 srxsvr_client_OBJECTS = $(am_srxsvr_client_OBJECTS)
 srxsvr_client_DEPENDENCIES = libsrx_util.la libsrx_shared.la \
 	libSRxProxy.la
+am__test_ski_cache_SOURCES_DIST = $(TEST_DIR)/test_ski_cache.c
+@BUILD_TEST_TRUE@am_test_ski_cache_OBJECTS = test_ski_cache.$(OBJEXT)
+test_ski_cache_OBJECTS = $(am_test_ski_cache_OBJECTS)
+test_ski_cache_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -146,11 +151,11 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 SOURCES = $(libSRxProxy_la_SOURCES) $(libsrx_shared_la_SOURCES) \
 	$(libsrx_util_la_SOURCES) $(rpkirtr_client_SOURCES) \
 	$(rpkirtr_svr_SOURCES) $(srx_server_SOURCES) \
-	$(srxsvr_client_SOURCES)
+	$(srxsvr_client_SOURCES) $(test_ski_cache_SOURCES)
 DIST_SOURCES = $(libSRxProxy_la_SOURCES) $(libsrx_shared_la_SOURCES) \
 	$(libsrx_util_la_SOURCES) $(rpkirtr_client_SOURCES) \
 	$(rpkirtr_svr_SOURCES) $(srx_server_SOURCES) \
-	$(srxsvr_client_SOURCES)
+	$(srxsvr_client_SOURCES) $(am__test_ski_cache_SOURCES_DIST)
 DATA = $(dist_libSRxProxy_libconfig_DATA) $(dist_srx_config_DATA) \
 	$(dist_srx_initd_DATA)
 HEADERS = $(noinst_HEADERS)
@@ -313,6 +318,7 @@ SERVER_DIR = server
 SHARED_DIR = shared
 TOOLS_DIR = tools
 UTIL_DIR = util
+TEST_DIR = test
 
 # Read the revision number of the revision file
 # This needs GNU-Make. if this is a problem, replace the 
@@ -431,6 +437,14 @@ rpkirtr_svr_LDADD = libsrx_util.la
 # Will be bundled with srx-proxy
 srxsvr_client_SOURCES = $(TOOLS_DIR)/srxsvr_client.c 
 srxsvr_client_LDADD = libsrx_util.la libsrx_shared.la libSRxProxy.la
+
+################################################################################
+################################################################################
+
+################################################################################
+################################################################################
+@BUILD_TEST_TRUE@testdir = $(bindir)
+@BUILD_TEST_TRUE@test_ski_cache_SOURCES = $(TEST_DIR)/test_ski_cache.c
 
 ################################################################################
 ################################################################################
@@ -642,6 +656,49 @@ clean-srxPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+install-testPROGRAMS: $(test_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	test -z "$(testdir)" || $(MKDIR_P) "$(DESTDIR)$(testdir)"
+	@list='$(test_PROGRAMS)'; test -n "$(testdir)" || list=; \
+	for p in $$list; do echo "$$p $$p"; done | \
+	sed 's/$(EXEEXT)$$//' | \
+	while read p p1; do if test -f $$p || test -f $$p1; \
+	  then echo "$$p"; echo "$$p"; else :; fi; \
+	done | \
+	sed -e 'p;s,.*/,,;n;h' -e 's|.*|.|' \
+	    -e 'p;x;s,.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/' | \
+	sed 'N;N;N;s,\n, ,g' | \
+	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1 } \
+	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
+	    if ($$2 == $$4) files[d] = files[d] " " $$1; \
+	    else { print "f", $$3 "/" $$4, $$1; } } \
+	  END { for (d in files) print "f", d, files[d] }' | \
+	while read type dir files; do \
+	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
+	    test -z "$$files" || { \
+	    echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(testdir)$$dir'"; \
+	    $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(testdir)$$dir" || exit $$?; \
+	    } \
+	; done
+
+uninstall-testPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(test_PROGRAMS)'; test -n "$(testdir)" || list=; \
+	files=`for p in $$list; do echo "$$p"; done | \
+	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
+	      -e 's/$$/$(EXEEXT)/' `; \
+	test -n "$$list" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(testdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(testdir)" && rm -f $$files
+
+clean-testPROGRAMS:
+	@list='$(test_PROGRAMS)'; test -n "$$list" || exit 0; \
+	echo " rm -f" $$list; \
+	rm -f $$list || exit $$?; \
+	test -n "$(EXEEXT)" || exit 0; \
+	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
+	echo " rm -f" $$list; \
+	rm -f $$list
 install-toolsPROGRAMS: $(tools_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	test -z "$(toolsdir)" || $(MKDIR_P) "$(DESTDIR)$(toolsdir)"
@@ -697,6 +754,9 @@ srx_server$(EXEEXT): $(srx_server_OBJECTS) $(srx_server_DEPENDENCIES)
 srxsvr_client$(EXEEXT): $(srxsvr_client_OBJECTS) $(srxsvr_client_DEPENDENCIES) 
 	@rm -f srxsvr_client$(EXEEXT)
 	$(LINK) $(srxsvr_client_OBJECTS) $(srxsvr_client_LDADD) $(LIBS)
+test_ski_cache$(EXEEXT): $(test_ski_cache_OBJECTS) $(test_ski_cache_DEPENDENCIES) 
+	@rm -f test_ski_cache$(EXEEXT)
+	$(LINK) $(test_ski_cache_OBJECTS) $(test_ski_cache_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -740,6 +800,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/srx_packets.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/srxsvr_client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/str.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_ski_cache.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/update_cache.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xml_out.Plo@am__quote@
@@ -1157,6 +1218,20 @@ srxsvr_client.obj: $(TOOLS_DIR)/srxsvr_client.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o srxsvr_client.obj `if test -f '$(TOOLS_DIR)/srxsvr_client.c'; then $(CYGPATH_W) '$(TOOLS_DIR)/srxsvr_client.c'; else $(CYGPATH_W) '$(srcdir)/$(TOOLS_DIR)/srxsvr_client.c'; fi`
 
+test_ski_cache.o: $(TEST_DIR)/test_ski_cache.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_ski_cache.o -MD -MP -MF $(DEPDIR)/test_ski_cache.Tpo -c -o test_ski_cache.o `test -f '$(TEST_DIR)/test_ski_cache.c' || echo '$(srcdir)/'`$(TEST_DIR)/test_ski_cache.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/test_ski_cache.Tpo $(DEPDIR)/test_ski_cache.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(TEST_DIR)/test_ski_cache.c' object='test_ski_cache.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_ski_cache.o `test -f '$(TEST_DIR)/test_ski_cache.c' || echo '$(srcdir)/'`$(TEST_DIR)/test_ski_cache.c
+
+test_ski_cache.obj: $(TEST_DIR)/test_ski_cache.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_ski_cache.obj -MD -MP -MF $(DEPDIR)/test_ski_cache.Tpo -c -o test_ski_cache.obj `if test -f '$(TEST_DIR)/test_ski_cache.c'; then $(CYGPATH_W) '$(TEST_DIR)/test_ski_cache.c'; else $(CYGPATH_W) '$(srcdir)/$(TEST_DIR)/test_ski_cache.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/test_ski_cache.Tpo $(DEPDIR)/test_ski_cache.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(TEST_DIR)/test_ski_cache.c' object='test_ski_cache.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_ski_cache.obj `if test -f '$(TEST_DIR)/test_ski_cache.c'; then $(CYGPATH_W) '$(TEST_DIR)/test_ski_cache.c'; else $(CYGPATH_W) '$(srcdir)/$(TEST_DIR)/test_ski_cache.c'; fi`
+
 mostlyclean-libtool:
 	-rm -f *.lo
 
@@ -1430,7 +1505,7 @@ check: check-am
 all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(DATA) $(HEADERS) \
 		config.h all-local
 installdirs:
-	for dir in "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(srxdir)" "$(DESTDIR)$(toolsdir)" "$(DESTDIR)$(libSRxProxy_libconfigdir)" "$(DESTDIR)$(srx_configdir)" "$(DESTDIR)$(srx_initddir)"; do \
+	for dir in "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(srxdir)" "$(DESTDIR)$(testdir)" "$(DESTDIR)$(toolsdir)" "$(DESTDIR)$(libSRxProxy_libconfigdir)" "$(DESTDIR)$(srx_configdir)" "$(DESTDIR)$(srx_initddir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -1461,8 +1536,8 @@ maintainer-clean-generic:
 clean: clean-am
 
 clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
-	clean-pkglibLTLIBRARIES clean-srxPROGRAMS clean-toolsPROGRAMS \
-	mostlyclean-am
+	clean-pkglibLTLIBRARIES clean-srxPROGRAMS clean-testPROGRAMS \
+	clean-toolsPROGRAMS mostlyclean-am
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
@@ -1485,7 +1560,7 @@ info-am:
 
 install-data-am: install-dist_libSRxProxy_libconfigDATA \
 	install-dist_srx_configDATA install-dist_srx_initdDATA \
-	install-srxPROGRAMS install-toolsPROGRAMS
+	install-srxPROGRAMS install-testPROGRAMS install-toolsPROGRAMS
 
 install-dvi: install-dvi-am
 
@@ -1536,16 +1611,17 @@ ps-am:
 uninstall-am: uninstall-dist_libSRxProxy_libconfigDATA \
 	uninstall-dist_srx_configDATA uninstall-dist_srx_initdDATA \
 	uninstall-local uninstall-pkglibLTLIBRARIES \
-	uninstall-srxPROGRAMS uninstall-toolsPROGRAMS
+	uninstall-srxPROGRAMS uninstall-testPROGRAMS \
+	uninstall-toolsPROGRAMS
 
 .MAKE: all install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am all-local am--refresh check check-am \
 	clean clean-generic clean-libtool clean-noinstLTLIBRARIES \
-	clean-pkglibLTLIBRARIES clean-srxPROGRAMS clean-toolsPROGRAMS \
-	ctags dist dist-all dist-bzip2 dist-gzip dist-lzma dist-shar \
-	dist-tarZ dist-xz dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	clean-pkglibLTLIBRARIES clean-srxPROGRAMS clean-testPROGRAMS \
+	clean-toolsPROGRAMS ctags dist dist-all dist-bzip2 dist-gzip \
+	dist-lzma dist-shar dist-tarZ dist-xz dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-libtool distclean-local distclean-tags \
 	distcleancheck distdir distuninstallcheck dvi dvi-am html \
 	html-am info info-am install install-am install-data \
@@ -1555,15 +1631,16 @@ uninstall-am: uninstall-dist_libSRxProxy_libconfigDATA \
 	install-exec-local install-html install-html-am install-info \
 	install-info-am install-man install-pdf install-pdf-am \
 	install-pkglibLTLIBRARIES install-ps install-ps-am \
-	install-srxPROGRAMS install-strip install-toolsPROGRAMS \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am \
+	install-srxPROGRAMS install-strip install-testPROGRAMS \
+	install-toolsPROGRAMS installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags uninstall uninstall-am \
 	uninstall-dist_libSRxProxy_libconfigDATA \
 	uninstall-dist_srx_configDATA uninstall-dist_srx_initdDATA \
 	uninstall-local uninstall-pkglibLTLIBRARIES \
-	uninstall-srxPROGRAMS uninstall-toolsPROGRAMS
+	uninstall-srxPROGRAMS uninstall-testPROGRAMS \
+	uninstall-toolsPROGRAMS
 
 
 .PHONY: clean-local distclean-local install-exec-local uninstall-local \

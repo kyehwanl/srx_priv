@@ -415,6 +415,16 @@ fi
 AC_SUBST(LIB_PATRICIA)
 AS_BOX([LIB_PATRICIA: '$LIB_PATRICIA'])
 
+AC_MSG_CHECKING([whether test tools have to be generated])
+AC_ARG_ENABLE([buildtest], [ --enable-builtest Build test tools],
+              [case "${enableval}" in
+                yes) buildtest=true ;;
+                no) buildtest=false ;;
+                *) AC_MSG_ERROR([bad value ${enableval} for --enable-buildtest]) 
+                   ;;
+              esac], [buildtest=false])
+AM_CONDITIONAL([BUILD_TEST], [test x$buildtest = xtrue])
+
 AS_BOX(Processing required headers)
 # Checks for header files.
 #                  winsock.h \
@@ -519,4 +529,4 @@ echo "CPU Type.......: $CPU_ARCH"
 echo "Library........: $VER_INFO ($LIB_VER_INFO)"
 echo "LCONFIG_INT....: $LCONFIG_INT"
 echo "RPM Incl. la...: ${incl_la_lib}"
-
+echo "Build Test.....: ${buildtest}"

@@ -24,7 +24,9 @@
  *
  * Changelog:
  * -----------------------------------------------------------------------------
- * 0.1.0.0  - 2017/06/14 - oborchert
+ * 0.1.0.0  - 2017/06/19 - oborchert
+ *            * modified function header for registering key ski's 
+ *          - 2017/06/14 - oborchert
  *            * File created
  */
 #ifndef SKI_CACHE_H
@@ -85,7 +87,7 @@ SKI_CACHE* createSKICache(void (*callback)(e_SKI_status, SRxUpdateID*));
  *
  * @param cache The SKI cache that needs to be removed.
  */
-void releaseUpdateCache(SKI_CACHE* cache);
+void releaseSKICache(SKI_CACHE* cache);
 
 /**
  * Register the update with the ski cache. This method scans through the 
@@ -122,10 +124,12 @@ void unregisterUpdateSKI(SKI_CACHE* cache, SRxUpdateID* updateID);
  * notifications for possible kick-starting of update validation.
  * 
  * @param cache The SKI cache.
- * @param ski The 20 byte SKI of the key
- * @param algoID The algorithm ID of the key
+ * @param ski The 20 byte SKI of the key.
+ * @param algoID The algorithm ID of the key.
+ * @param asn The ASN the key is assigned to.
  */
-void registerKeySKI(SKI_CACHE* cache, u_int8_t* ski, u_int8_t algoID);
+void registerKeySKI(SKI_CACHE* cache, u_int8_t* ski, u_int8_t algoID, 
+                    u_int32_t asn);
 
 /** 
  * Remove the key counter from the <SKI, algo-id> tuple. This might trigger 
@@ -134,8 +138,10 @@ void registerKeySKI(SKI_CACHE* cache, u_int8_t* ski, u_int8_t algoID);
  * @param cache The SKI cache.
  * @param ski The 20 byte SKI of the key
  * @param algoID The algorithm ID of the key
+ * @param asn The ASN the key is assigned to.
  */
-void unregisterKeySKI(SKI_CACHE* cache, u_int8_t* ski, u_int8_t algoID);
+void unregisterKeySKI(SKI_CACHE* cache, u_int8_t* ski, u_int8_t algoID,
+                      u_int32_t asn);
 
 /**
  * Empty the SKI cache from un-used SKI numbers. This is a maintenance method

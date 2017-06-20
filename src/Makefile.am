@@ -10,6 +10,7 @@ SERVER_DIR = server
 SHARED_DIR = shared
 TOOLS_DIR = tools
 UTIL_DIR = util
+TEST_DIR = test
 
 # Read the revision number of the revision file
 # This needs GNU-Make. if this is a problem, replace the 
@@ -152,6 +153,21 @@ srxsvr_client_LDADD   = libsrx_util.la libsrx_shared.la libSRxProxy.la
 
 ################################################################################
 ##  END SRX TOOLS
+################################################################################
+
+################################################################################
+##  TEST files
+################################################################################
+if BUILD_TEST
+  testdir=$(bindir)
+
+  test_PROGRAMS= test_ski_cache
+
+  test_ski_cache_SOURCES = $(TEST_DIR)/test_ski_cache.c
+endif
+
+################################################################################
+##  END TEST files
 ################################################################################
 
 # Don't install
