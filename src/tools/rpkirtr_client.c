@@ -54,7 +54,6 @@
 
 /** The default RPKI port (rfc6810) */
 #define DEF_RPKI_PORT  323
-#define DEF_RPKI_PORT  50001
 #define DEF_RPKI_CACHE "localhost";
 #define DEF_FMT_AN "+ %u %s(%u)"
 #define DEF_FMT_WD "+ %u %s(%u)"
@@ -225,6 +224,7 @@ void syntax(const char* prgName)
     printf ("     -s: perform only a single run.\n");
     printf ("     -a <format>: The printout format for announcements.\n");
     printf ("     -r <format>: The printout format for withdrawals.\n");
+    printf ("     -V <0|1>: version for rpki router client.\n");
     printf (" format:\n");
     printf ("    The default format if \"%s\" for announcements and\n"
             "    \"%s\" for withdrawals.\n", DEF_FMT_AN, DEF_FMT_WD);
@@ -293,8 +293,9 @@ bool parseParams(int argc, char** argv, RPKIRouterClientParams* params,
             break;
           case 'a':
             isA = true;
-          case 'r':
+          case 'V':
             params->version= atoi(argv[2] );
+            idx++;
             break;
           case 'w':
             idx++;
