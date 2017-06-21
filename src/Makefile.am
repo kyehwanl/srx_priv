@@ -182,11 +182,12 @@ noinst_HEADERS = $(CLIENT_DIR)/client_connection_handler.h \
 		 $(SERVER_DIR)/configuration.h \
 		 $(SERVER_DIR)/console.h \
 		 $(SERVER_DIR)/key_cache.h \
-		 $(SERVER_DIR)/ski_cache.h \
+		 $(SERVER_DIR)/main.h \
 		 $(SERVER_DIR)/prefix_cache.h \
 		 $(SERVER_DIR)/rpki_handler.h \
 		 $(SERVER_DIR)/rpki_router_client.h \
 		 $(SERVER_DIR)/server_connection_handler.h \
+		 $(SERVER_DIR)/ski_cache.h \
 		 $(SERVER_DIR)/srx_packet_sender.h \
 		 $(SERVER_DIR)/srx_server.h \
 		 $(SERVER_DIR)/update_cache.h \

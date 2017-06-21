@@ -26,7 +26,9 @@
  *
  * Changelog:
  * -----------------------------------------------------------------------------
- *  0.5.0.0 - 2017/06/16 - kyehwanl
+ *  0.5.0.0 - 2017/06/21 - oborchert
+ *            * Added include for main.h to resolve compiler warnings.
+ *          - 2017/06/16 - kyehwanl
  *            * Added handling of router keys
  *  0.3.0.0 - 2013/01/28 - oborchert
  *            * Update to be compliant to draft-ietf-sidr-rpki-rtr.26. This
@@ -42,6 +44,7 @@
  * -----------------------------------------------------------------------------
  */
 
+#include "server/main.h"
 #include "server/rpki_handler.h"
 #include "util/log.h"
 

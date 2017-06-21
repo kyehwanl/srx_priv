@@ -38,7 +38,9 @@
  *
  * Changelog:
  * -----------------------------------------------------------------------------
- * 0.5.0.0  - 2017/06/16 - kyehwanl
+ * 0.5.0.0  - 2017/06/21 - oborchert
+ *            * Added main.h to resolve compiler warning for getSrxCAPI()
+ *          - 2017/06/16 - kyehwanl
  *            * Added SRxCryproAPI
  * 0.3.0.10 - 2015/11/10 - oborchert
  *            * Removed unused static colsoleLoop
@@ -73,6 +75,7 @@
 #include "server/console.h"
 #include "server/key_cache.h"
 #include "server/prefix_cache.h"
+#include "server/main.h"
 #include "server/rpki_handler.h"
 #include "server/server_connection_handler.h"
 #include "server/srx_server.h"
@@ -508,6 +511,8 @@ void shutDown()
  * Return the pointer to CAPI
  *
  * @return the pointer to CAPI
+ * 
+ * @since 0.5.0.0
  */
 SRxCryptoAPI* getSrxCAPI()
 {

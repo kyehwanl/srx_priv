@@ -35,6 +35,7 @@
  */
 
 #include "server/bgpsec_handler.h"
+#include "server/main.h"
 #include "util/log.h"
 
 bool createBGPSecHandler(BGPSecHandler* self, KeyCache* keyCache,

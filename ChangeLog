@@ -1,4 +1,7 @@
-Changelog for Version 0.4.1
+Changelog for Version 0.5.0
+- Added SKI cache.
+- Included BGPsec patch validation (RFC 8205) by using SCA
+- Updated router to cache implementation to follow RFC 8210 (former 6810)
 - Modified default port for RPKI-RTR Server to 323 as specified in RFC 6810
 - Replaced calls to legacy function bzero with memset
 Changelog for Version 0.4.0
