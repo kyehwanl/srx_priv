@@ -80,14 +80,21 @@ typedef void SKI_CACHE;
  * 
  * @return Pointer to the SKI cache or NULL.
  */
-SKI_CACHE* createSKICache(void (*callback)(e_SKI_status, SRxUpdateID*));
+SKI_CACHE* ski_createCache(void (*callback)(e_SKI_status, SRxUpdateID*));
 
 /**
  * Frees all allocated resources.
  *
  * @param cache The SKI cache that needs to be removed.
  */
-void releaseSKICache(SKI_CACHE* cache);
+void ski_releaseCache(SKI_CACHE* cache);
+
+/**
+ * Empty the SKI cache from un-used SKI numbers. This is a maintenance method
+ * that can be computational extensive. It is not guaranteed that the cleanup
+ * is done instantaneously.
+ */
+void ski_clean(SKI_CACHE* cache);
 
 /**
  * Register the update with the ski cache. This method scans through the 
@@ -103,50 +110,46 @@ void releaseSKICache(SKI_CACHE* cache);
  * 
  * @param cache The SKI cache.
  * @param updateID The ID of the BGPSec update
- * @param bgpsec The BGPSEC path attribute.
+ * @param bgpsec The BGPsec_PATH attribute.
  * 
  * @return SKIVAL_ERROR if not bgpsec update, SKIVAL_INVALID if at least one key 
  * is missing in all signature blocks, SKIVAL_UNKNOWN if all keys are available.
  */
-e_Upd_RegRes registerUpdateSKI(SKI_CACHE* cache, SRxUpdateID* updateID, 
-                               SCA_BGPSEC_SecurePath* bgpsec);
+e_Upd_RegRes ski_registerUpdate(SKI_CACHE* cache, SRxUpdateID* updateID, 
+                                SCA_BGP_PathAttribute* bgpsec);
 
 /**
  * Remove the update id from the SKI cache.
  * 
  * @param cache The SKI cache
  * @param updateID The update ID to be unregistered
+ * @param bgpsec The BGPSEC path attribute.
  */
-void unregisterUpdateSKI(SKI_CACHE* cache, SRxUpdateID* updateID);
+void ski_unregisterUpdate(SKI_CACHE* cache, SRxUpdateID* updateID,
+                          SCA_BGPSEC_SecurePath* bgpsec);
 
 /**
  * Register the <SKI, algo-id> tuple in the SKI cache. This might trigger 
  * notifications for possible kick-starting of update validation.
  * 
  * @param cache The SKI cache.
+ * @param asn The ASN the key is assigned to in host format.
  * @param ski The 20 byte SKI of the key.
  * @param algoID The algorithm ID of the key.
- * @param asn The ASN the key is assigned to.
  */
-void registerKeySKI(SKI_CACHE* cache, u_int8_t* ski, u_int8_t algoID, 
-                    u_int32_t asn);
+void ski_registerKey(SKI_CACHE* cache, u_int32_t asn, 
+                     u_int8_t* ski, u_int8_t algoID);
 
 /** 
  * Remove the key counter from the <SKI, algo-id> tuple. This might trigger 
  * notifications for possible kick-starting of update validation.
  * 
  * @param cache The SKI cache.
+ * @param asn The ASN the key is assigned to in host format.
  * @param ski The 20 byte SKI of the key
  * @param algoID The algorithm ID of the key
- * @param asn The ASN the key is assigned to.
  */
-void unregisterKeySKI(SKI_CACHE* cache, u_int8_t* ski, u_int8_t algoID,
-                      u_int32_t asn);
+void ski_unregisterKey(SKI_CACHE* cache, u_int32_t asn, 
+                       u_int8_t* ski, u_int8_t algoID);
 
-/**
- * Empty the SKI cache from un-used SKI numbers. This is a maintenance method
- * that can be computational extensive. It is not guaranteed that the cleanup
- * is done instantaneously.
- */
-void clean(SKI_CACHE* cache);
 #endif /* SKI_CACHE_H */

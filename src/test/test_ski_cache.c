@@ -165,7 +165,7 @@ int main(int argc, char** argv)
     printData(testData[idx], " -> ");
   }
 
-  SKI_CACHE* cache = createSKICache(mySKI_CacheHandler);
+  SKI_CACHE* cache = ski_createCache(mySKI_CacheHandler);
 
   printf ("Register Data:\n");
   for (idx = 0; idx < elements; idx++)
@@ -174,8 +174,8 @@ int main(int argc, char** argv)
     //registerUpdateSKI(cache, SRxUpdateID* updateID, SCA_BGPSEC_SecurePath* bgpsec);    
     //unregisterUpdateSKI(cache, SRxUpdateID* updateID);
     
-    registerKeySKI(cache, testData[idx]->ski, testData[idx]->algoID, 
-                          testData[idx]->asn);
+    ski_registerKey(cache, testData[idx]->asn,
+                    testData[idx]->ski, testData[idx]->algoID);
   }
   
   printf ("Register Data:\n");
@@ -184,15 +184,15 @@ int main(int argc, char** argv)
     printData(testData[idx], " Unregister ");
     //registerUpdateSKI(cache, SRxUpdateID* updateID, SCA_BGPSEC_SecurePath* bgpsec);    
     //unregisterUpdateSKI(cache, SRxUpdateID* updateID);    
-    unregisterKeySKI(cache, testData[idx]->ski, testData[idx]->algoID, 
-                            testData[idx]->asn);
+    ski_unregisterKey(cache, testData[idx]->asn,
+                      testData[idx]->ski, testData[idx]->algoID);
   }
   
   printf ("Clean Cache:\n");  
-  clean(cache);  
+  ski_clean(cache);  
   
   printf ("Release Cache:\n");    
-  releaseSKICache(cache);
+  ski_releaseCache(cache);
 
   cache=NULL;
   
