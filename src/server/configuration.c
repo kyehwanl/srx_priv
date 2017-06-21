@@ -684,6 +684,9 @@ bool readConfigFile(Configuration* self, const char* filename)
     config_setting_lookup_int(sett, "port", &intVal) == CONFIG_TRUE ?
       (self->rpki_port = (int)intVal):
       (intVal = 0);
+    config_setting_lookup_int(sett, "version", &intVal) == CONFIG_TRUE ?
+      (self->rpki_version = (int)intVal):
+      (self->rpki_version = 0);
   }
 
   // BGPSec

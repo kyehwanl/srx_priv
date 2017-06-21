@@ -171,6 +171,8 @@ typedef struct {
   const char* serverHost;
   /** Set this variable to the server port number. */
   int         serverPort;
+  /* rpki version info */
+  int         version;
 } RPKIRouterClientParams;
 
 /**
@@ -219,6 +221,8 @@ typedef struct {
    * without continuous polling.
    * @since 0.5.0.0 */
   bool                     stopAfterEndOfData;
+  /* rpki version info */
+  int8_t                   version;
 } RPKIRouterClient;
 
 /**

@@ -264,7 +264,7 @@ static bool setupHandlers()
   bool retVal = true;
 
   if (!createRPKIHandler (&rpkiHandler, &prefixCache,
-                          config.rpki_host, config.rpki_port))
+                          config.rpki_host, config.rpki_port, config.rpki_version))
   {
     RAISE_ERROR("Failed to create RPKI Handler.");
   }
@@ -506,7 +506,7 @@ void shutDown()
 
 /**
  * Return the pointer to CAPI
- * 
+ *
  * @return the pointer to CAPI
  */
 SRxCryptoAPI* getSrxCAPI()

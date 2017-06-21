@@ -88,7 +88,7 @@ typedef enum {
 #define PREFIX_FLAG_ANNOUNCEMENT  0x01
 
 /** The current protocol implementation. */
-#define RPKI_RTR_PROTOCOL_VERSION 1;
+#define RPKI_RTR_PROTOCOL_VERSION 0;
 
 //
 // The following types could be optimized but

@@ -616,6 +616,7 @@ bool createRPKIRouterClient (RPKIRouterClient* self,
   self->startup          = true;
 
   self->routerClientID = createRouterClientID(self);
+  self->version         = params->version;
 
   ret = pthread_create (&self->thread, NULL, manageConnection, self);
   if (ret)
@@ -671,7 +672,7 @@ bool sendResetQuery (RPKIRouterClient* self)
   {
     LOG(LEVEL_DEBUG, HDR "Send Reset Query(srq)...", pthread_self());
 
-    hdr.version  = RPKI_RTR_PROTOCOL_VERSION;
+    hdr.version  = self->version;
     hdr.type     = PDU_TYPE_RESET_QUERY;
     hdr.reserved = 0x0000;
     hdr.length   = htonl(sizeof(RPKIResetQueryHeader));

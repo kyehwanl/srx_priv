@@ -27,7 +27,7 @@
  * Changelog:
  * -----------------------------------------------------------------------------
  *  0.5.0.0 - 2017/06/16 - kyehwanl
- *            * Updated code to use RFC8210 (former 6810-bis-9) 
+ *            * Updated code to use RFC8210 (former 6810-bis-9)
  *          - 2017/06/16 - oborchert
  *            * Version 0.4.1.0 is trashed and moved to 0.5.0.0
  *          - 2016/09/29 - oborchert
@@ -54,6 +54,7 @@
 
 /** The default RPKI port (rfc6810) */
 #define DEF_RPKI_PORT  323
+#define DEF_RPKI_PORT  50001
 #define DEF_RPKI_CACHE "localhost";
 #define DEF_FMT_AN "+ %u %s(%u)"
 #define DEF_FMT_WD "+ %u %s(%u)"
@@ -255,6 +256,7 @@ bool parseParams(int argc, char** argv, RPKIRouterClientParams* params,
 
   params->serverHost = NULL;
   params->serverPort = 0;
+  params->version = 0;
 
   for (idx = 1; (idx < argc) && !doHelp; idx++)
   {
@@ -291,6 +293,9 @@ bool parseParams(int argc, char** argv, RPKIRouterClientParams* params,
             break;
           case 'a':
             isA = true;
+          case 'r':
+            params->version= atoi(argv[2] );
+            break;
           case 'w':
             idx++;
             if (idx < argc)

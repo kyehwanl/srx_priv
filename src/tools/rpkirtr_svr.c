@@ -33,7 +33,7 @@
  * Changelog:
  * -----------------------------------------------------------------------------
  * 0.5.0.0  - 2017/06/16 - kyehwanl
- *            * Updated code to use RFC8210 (former 6810-bis-9) 
+ *            * Updated code to use RFC8210 (former 6810-bis-9)
  *          - 2017/06/16 - oborchert
  *            * Version 0.4.1.0 is trashed and moved to 0.5.0.0
  *          - 2016/08/30 - oborchert
@@ -120,6 +120,8 @@ typedef struct {
   time_t    expires;
   /** true if IPv6 prefix */
   bool      isV6;
+  /* router key indicator */
+  bool      isKey;
 
   /** Prefix (v4, v6) - stored in network Byte order */
   uint8_t   flags;           // Might not be needed.
@@ -184,7 +186,8 @@ typedef struct {
 #define CMD_ID_RUN       17
 #define CMD_ID_SLEEP     18
 
-#define DEF_RPKI_PORT    323
+//#define DEF_RPKI_PORT    323
+#define DEF_RPKI_PORT    50001
 #define UNDEF_VERSION    -1
 /*----------
  * Constants
@@ -208,6 +211,7 @@ struct {
   RWLock    lock;
   uint32_t  maxSerial;
   uint32_t  minPSExpired, maxSExpired;
+  uint8_t   version;
 } cache;
 
 struct {
@@ -316,14 +320,14 @@ bool dropSession(int* fdPtr)
  *
  * @return
  */
-bool sendPDUWithSerial(int* fdPtr, RPKIRouterPDUType type, uint32_t serial)
+bool sendPDUWithSerial(int* fdPtr, RPKIRouterPDUType type, uint32_t serial, uint8_t version)
 {
   uint8_t                pdu[sizeof(RPKISerialQueryHeader)];
   RPKISerialQueryHeader* hdr;
 
   // Create PDU
   hdr = (RPKISerialQueryHeader*)pdu;
-  hdr->version   = RPKI_RTR_PROTOCOL_VERSION;
+  hdr->version   = version;
   hdr->type      = (uint8_t)type;
   hdr->sessionID = htons(sessionID);
   hdr->length    = htonl(sizeof(RPKISerialQueryHeader));
@@ -362,14 +366,14 @@ bool sendCacheReset(int* fdPtr)
  *
  * @return true id the packet was send successful.
  */
-bool sendCacheResponse(int* fdPtr)
+bool sendCacheResponse(int* fdPtr, int version)
 {
   uint8_t                  pdu[sizeof(RPKICacheResetHeader)];
   RPKICacheResponseHeader* hdr;
 
   // Create PDU
   hdr = (RPKICacheResponseHeader*)pdu;
-  hdr->version   = RPKI_RTR_PROTOCOL_VERSION;
+  hdr->version   = version;
   hdr->type      = (uint8_t)PDU_TYPE_CACHE_RESPONSE;
   hdr->sessionID = htons(sessionID);
   hdr->length    = htonl(sizeof(RPKICacheResetHeader));
@@ -388,7 +392,7 @@ bool sendCacheResponse(int* fdPtr)
  *                ignored.
  */
 void sendPrefixes(int* fdPtr, uint32_t clientSerial, uint16_t clientSessionID,
-                  bool isReset)
+                  bool isReset, int version)
 {
   // No need to send the notify anymore
   service.notify = false;
@@ -415,7 +419,7 @@ void sendPrefixes(int* fdPtr, uint32_t clientSerial, uint16_t clientSessionID,
   else
   { // Send the prefix
     // Send 'Cache Response'
-    if (!sendCacheResponse(fdPtr))
+    if (!sendCacheResponse(fdPtr, version))
     {
       ERRORF("Error: Failed to send a 'Cache Response'\n");
     }
@@ -433,17 +437,17 @@ void sendPrefixes(int* fdPtr, uint32_t clientSerial, uint16_t clientSessionID,
         RPKIRouterKeyHeader   rkhdr;
 
         // Basic initialization of data that does NOT change
-        v4hdr->version  = RPKI_RTR_PROTOCOL_VERSION;
+        v4hdr->version  = version;
         v4hdr->type     = PDU_TYPE_IP_V4_PREFIX;
         v4hdr->reserved = 0;
         v4hdr->length   = htonl(sizeof(RPKIIPv4PrefixHeader));
 
-        v6hdr->version  = RPKI_RTR_PROTOCOL_VERSION;
+        v6hdr->version  = version;
         v6hdr->type     = PDU_TYPE_IP_V6_PREFIX;
         v6hdr->reserved = 0;
         v6hdr->length   = htonl(sizeof(RPKIIPv6PrefixHeader));
 
-        rkhdr.version   = RPKI_RTR_PROTOCOL_VERSION;
+        rkhdr.version   = version;
         rkhdr.type      = PDU_TYPE_ROUTER_KEY;
         rkhdr.zero      = 0;
 
@@ -485,57 +489,63 @@ void sendPrefixes(int* fdPtr, uint32_t clientSerial, uint16_t clientSessionID,
           }
 
           // Send 'Router Key'
-          if( cEntry->prefixLength == 0 && cEntry->prefixMaxLength == 0 &&
+          if( cEntry->isKey == true && cEntry->prefixLength == 0 &&
+              cEntry->prefixMaxLength == 0 &&
               cEntry->ski && cEntry->pPubKeyData)
 
           {
-            rkhdr.flags     = cEntry->flags;
-            memcpy(&rkhdr.ski, cEntry->ski, 20);
-            memcpy(&rkhdr.keyInfo, cEntry->pPubKeyData, 91);
-            rkhdr.as        = cEntry->asNumber;
-            rkhdr.length    = htonl(sizeof(RPKIRouterKeyHeader));
-
-            OUTPUTF(false, "Sending an 'Router Key' (serial = %u)\n",
-                    cEntry->serial);
-            if (!sendNum(fdPtr, &rkhdr, sizeof(RPKIRouterKeyHeader)))
+            if (version == 1)
             {
-              ERRORF("Error: Failed to send a 'Prefix'\n");
-              break;
-            }
-            continue;
-          }
+              rkhdr.flags     = cEntry->flags;
+              memcpy(&rkhdr.ski, cEntry->ski, 20);
+              memcpy(&rkhdr.keyInfo, cEntry->pPubKeyData, 91);
+              rkhdr.as        = cEntry->asNumber;
+              rkhdr.length    = htonl(sizeof(RPKIRouterKeyHeader));
 
-          // Send 'Prefix'
-          if (!cEntry->isV6)
-          {
-            v4hdr->flags     = cEntry->flags;
-            v4hdr->prefixLen = cEntry->prefixLength;
-            v4hdr->maxLen    = cEntry->prefixMaxLength;
-            v4hdr->zero      = (uint8_t)0;
-            v4hdr->addr      = cEntry->address.v4;
-            v4hdr->as        = cEntry->asNumber;
-            OUTPUTF(false, "Sending an 'IPv4Prefix' (serial = %u)\n",
-                    cEntry->serial);
-            if (!sendNum(fdPtr, &v4pdu, sizeof(RPKIIPv4PrefixHeader)))
-            {
-              ERRORF("Error: Failed to send a 'Prefix'\n");
-              break;
+              OUTPUTF(false, "Sending an 'Router Key' (serial = %u)\n",
+                  cEntry->serial);
+              if (!sendNum(fdPtr, &rkhdr, sizeof(RPKIRouterKeyHeader)))
+              {
+                ERRORF("Error: Failed to send a 'RouterKey'\n");
+                break;
+              }
+              continue;
             }
           }
           else
           {
-            v6hdr->flags     = cEntry->flags;
-            v6hdr->prefixLen = cEntry->prefixLength;
-            v6hdr->maxLen    = cEntry->prefixMaxLength;
-            v6hdr->zero      = (uint8_t)0;
-            v6hdr->addr      = cEntry->address.v6;
-            v6hdr->as        = cEntry->asNumber;
-            OUTPUTF(false, "Sending an 'IPv6Prefix' (serial = %u)\n",
-                    cEntry->serial);
-            if (!sendNum(fdPtr, &v6pdu, sizeof(RPKIIPv6PrefixHeader)))
+            // Send 'Prefix'
+            if (!cEntry->isV6)
             {
-              ERRORF("Error: Failed to send a 'Prefix'\n");
-              break;
+              v4hdr->flags     = cEntry->flags;
+              v4hdr->prefixLen = cEntry->prefixLength;
+              v4hdr->maxLen    = cEntry->prefixMaxLength;
+              v4hdr->zero      = (uint8_t)0;
+              v4hdr->addr      = cEntry->address.v4;
+              v4hdr->as        = cEntry->asNumber;
+              OUTPUTF(false, "Sending an 'IPv4Prefix' (serial = %u)\n",
+                  cEntry->serial);
+              if (!sendNum(fdPtr, &v4pdu, sizeof(RPKIIPv4PrefixHeader)))
+              {
+                ERRORF("Error: Failed to send a 'Prefix'\n");
+                break;
+              }
+            }
+            else
+            {
+              v6hdr->flags     = cEntry->flags;
+              v6hdr->prefixLen = cEntry->prefixLength;
+              v6hdr->maxLen    = cEntry->prefixMaxLength;
+              v6hdr->zero      = (uint8_t)0;
+              v6hdr->addr      = cEntry->address.v6;
+              v6hdr->as        = cEntry->asNumber;
+              OUTPUTF(false, "Sending an 'IPv6Prefix' (serial = %u)\n",
+                  cEntry->serial);
+              if (!sendNum(fdPtr, &v6pdu, sizeof(RPKIIPv6PrefixHeader)))
+              {
+                ERRORF("Error: Failed to send a 'Prefix'\n");
+                break;
+              }
             }
           }
         }
@@ -545,7 +555,7 @@ void sendPrefixes(int* fdPtr, uint32_t clientSerial, uint16_t clientSessionID,
       OUTPUTF(true, "Sending an 'End of Data (max. serial = %u)\n",
               cache.maxSerial);
 
-      if (!sendPDUWithSerial(fdPtr, PDU_TYPE_END_OF_DATA, cache.maxSerial))
+      if (!sendPDUWithSerial(fdPtr, PDU_TYPE_END_OF_DATA, cache.maxSerial, cache.version))
       {
         ERRORF("Error: Failed to send a 'End of Data'\n");
       }
@@ -572,7 +582,7 @@ int sendSerialNotifyToAllClients()
     for (client = clients; client; client = client->hh.next)
     {
       if (!sendPDUWithSerial(&client->fd, PDU_TYPE_SERIAL_NOTIFY,
-                             cache.maxSerial))
+                             cache.maxSerial, cache.version))
       {
         ERRORF("Error: Failed to send a 'Serial Notify\n");
       }
@@ -966,13 +976,13 @@ void handleClient(ServerSocket* svrSock, int sock, void* user)
         {
           serial = ntohl(*((uint32_t*)buf));
           sessionID  = ntohs(hdr.mixed);
-          sendPrefixes(&sock, serial, sessionID, false);
+          sendPrefixes(&sock, serial, sessionID, false, ccl->version);
         }
         break;
 
       case PDU_TYPE_RESET_QUERY:
         OUTPUTF(true, "[+%lds] Received a 'Reset Query'\n", diffReq);
-        sendPrefixes(&sock, 0, sessionID, true);
+        sendPrefixes(&sock, 0, sessionID, true, ccl->version);
         break;
 
       case PDU_TYPE_ERROR_REPORT:
@@ -1351,6 +1361,8 @@ int showHelp(char* command)
            "  - removeNow <index> [end-index] :\n"
            "                         Remove one or more cache entries without\n"
            "                         any delay!\n"
+           "  - addKey <as> <cert file>: \n"
+           "                         Manually add a RPKI Router Certificate\n"
            "  - error <code> <pdu|-> <message|-> :\n"
            "                         Issues an error report. The pdu contains\n"
            "                         all real fields comma separated.\n"
@@ -1487,7 +1499,7 @@ bool appendPrefixData(char* arg, bool fromFile)
   cache.maxSerial += numAdded;
   unlockReadLock(&cache.lock);
 
-  OUTPUTF(true, "Read %d entr%s\n", (int)numAdded,(fromFile ? "ies" : "y"));
+  OUTPUTF(true, "Read %d Prefix entr%s\n", (int)numAdded,(fromFile ? "ies" : "y"));
 
   // Send notify at least one entry was added
   if (numAdded > 0)
@@ -1597,6 +1609,7 @@ bool readRouterKeyData(const char* arg, SList* dest, uint32_t serial, bool isFil
   cEntry->prefixLength    = 0;
   cEntry->prefixMaxLength = 0;
   cEntry->isV6 = false;
+  cEntry->isKey = true;
   cEntry->address.v4.in_addr.s_addr= 0;
 
 
@@ -1634,6 +1647,7 @@ bool appendRouterKeyData(char* arg, bool fromFile)
   cache.maxSerial += numAdded;
   unlockReadLock(&cache.lock);
 
+  OUTPUTF(true, "Read %d Router Key entry\n", (int)numAdded);
 
   if (numAdded > 0)
   {
@@ -1752,7 +1766,14 @@ int printCache()
       printf("%c %4u: ",
              ((cEntry->flags & PREFIX_FLAG_ANNOUNCEMENT) ? ' ' : '*'), pos++);
 
-      if (cEntry->isV6)
+      if (cEntry->isKey)
+      {
+        printf("SKI: %02X%02X%02X%02X, OAS=%u",
+                (unsigned char)cEntry->ski[0], (unsigned char)cEntry->ski[1],
+                (unsigned char)cEntry->ski[2], (unsigned char)cEntry->ski[3],
+                ntohl(cEntry->asNumber));
+      }
+      else if (cEntry->isV6)
       {
         printf("%s/%hhu, OAS=%u",
                ipV6AddressToStr(&cEntry->address.v6, ipBuf, IPBUF_SIZE),
@@ -2256,6 +2277,7 @@ bool setupCache()
   cache.maxSerial     = 0;
   cache.minPSExpired  = UINT32_MAX;
   cache.maxSExpired   = 0;
+  cache.version       = 1; // cache version
 
   return true;
 }

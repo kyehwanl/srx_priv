@@ -85,7 +85,7 @@ static void handleRouterKey (uint32_t valCacheID, uint16_t session_id,
  * @return
  */
 bool createRPKIHandler (RPKIHandler* handler, PrefixCache* prefixCache,
-                        const char* serverHost, int serverPort)
+                        const char* serverHost, int serverPort, int rpki_version)
 {
   // Attach the prefix cache
   handler->prefixCache = prefixCache;
@@ -99,6 +99,7 @@ bool createRPKIHandler (RPKIHandler* handler, PrefixCache* prefixCache,
 
   handler->rrclParams.serverHost         = serverHost;
   handler->rrclParams.serverPort         = serverPort;
+  handler->rrclParams.version            = rpki_version;
 
   if (!createRPKIRouterClient(&handler->rrclInstance, &handler->rrclParams,
                                handler))
