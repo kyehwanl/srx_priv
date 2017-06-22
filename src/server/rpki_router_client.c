@@ -715,7 +715,7 @@ bool sendResetQuery (RPKIRouterClient* self)
 bool sendSerialQuery (RPKIRouterClient* self)
 {
   RPKISerialQueryHeader hdr;
-  hdr.version   = RPKI_RTR_PROTOCOL_VERSION;
+  hdr.version   = self->version;
   hdr.type      = PDU_TYPE_SERIAL_QUERY;
   hdr.sessionID = self->sessionID;
   hdr.length    = htonl(sizeof(RPKISerialQueryHeader));

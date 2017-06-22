@@ -41,6 +41,9 @@
 #include "server/rpki_router_client.h"
 #include "util/prefix.h"
 
+#define PUB_KEY_OCTET 91
+#define SKI_OCTET 20
+
 /**
  * A single RPKI/Router Handler.
  */

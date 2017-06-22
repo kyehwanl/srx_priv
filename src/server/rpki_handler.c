@@ -225,10 +225,10 @@ static void handleRouterKey (uint32_t valCacheID, uint16_t session_id,
 
   bsKey.algoID = 1;
   bsKey.asn = htonl(asn);
-  memcpy(bsKey.ski, ski, 20);
-  bsKey.keyLength = 91;
-  bsKey.keyData = (u_int8_t*)calloc(1,91);
-  memcpy(bsKey.keyData, keyInfo, 91);
+  memcpy(bsKey.ski, ski, SKI_OCTET);
+  bsKey.keyLength = PUB_KEY_OCTET;
+  bsKey.keyData = (u_int8_t*)calloc(1, PUB_KEY_OCTET);
+  memcpy(bsKey.keyData, keyInfo, PUB_KEY_OCTET);
 
   res = srxCAPI->registerPublicKey(&bsKey, &status);
 

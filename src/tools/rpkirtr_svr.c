@@ -202,6 +202,13 @@ const char* USER_PROMPT               = ">> \0";
 const int   SERVICE_TIMER_INTERVAL    = 60;   ///< Service interval (sec)
 const int   CACHE_EXPIRATION_INTERVAL = 3600; ///< Sec. to keep removed entries
 
+#define PUB_KEY_OCTET 91
+#define KEY_BIN_SIZE 91
+#define SKI_SIZE     20
+#define MAX_CERT_READ_SIZE 260
+#define OFFSET_PUBKEY 170
+#define OFFSET_SKI 130
+#define COMMAND_BUF_SIZE 256
 /*-----------------
  * Global variables
  */
@@ -496,8 +503,8 @@ void sendPrefixes(int* fdPtr, uint32_t clientSerial, uint16_t clientSessionID,
             if (version == 1)
             {
               rkhdr.flags     = cEntry->flags;
-              memcpy(&rkhdr.ski, cEntry->ski, 20);
-              memcpy(&rkhdr.keyInfo, cEntry->pPubKeyData, 91);
+              memcpy(&rkhdr.ski, cEntry->ski, SKI_SIZE);
+              memcpy(&rkhdr.keyInfo, cEntry->pPubKeyData, KEY_BIN_SIZE);
               rkhdr.as        = cEntry->asNumber;
               rkhdr.length    = htonl(sizeof(RPKIRouterKeyHeader));
 
@@ -1529,12 +1536,6 @@ unsigned char hex2bin_byte(char* in)
 }
 
 
-#define KEY_BIN_SIZE 91
-#define SKI_SIZE     20
-#define MAX_CERT_READ_SIZE 260
-#define OFFSET_PUBKEY 170
-#define OFFSET_SKI 130
-#define COMMAND_BUF_SIZE 256
 bool readRouterKeyData(const char* arg, SList* dest, uint32_t serial, bool isFile)
 {
 
@@ -1558,14 +1559,14 @@ bool readRouterKeyData(const char* arg, SList* dest, uint32_t serial, bool isFil
   // Load the router certificate in DER format
   if (isFile)
   {
-    // TODO: need to read certificate file
+    // to read certificate file
     fpKey = fopen (fields[1], "rb");
     if (fpKey == NULL)
     {
       ERRORF("Error: Failed to open '%s'\n", fields[1]);
       return false;
     }
-    // TODO: need to read a certificate and
+    // to read a certificate and
     // parsing pubkey part and SKI
     //
     fseek(fpKey, OFFSET_PUBKEY, SEEK_SET);
@@ -1637,7 +1638,7 @@ bool appendRouterKeyData(char* arg, bool fromFile)
 
   changeReadToWriteLock(&cache.lock);
 
-  // TODO: function for certificate reading
+  // function for certificate reading
   succ = readRouterKeyData(arg, &cache.entries, cache.maxSerial+1, fromFile);
 
   changeWriteToReadLock(&cache.lock);
